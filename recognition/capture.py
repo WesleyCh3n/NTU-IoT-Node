@@ -18,7 +18,7 @@ if __name__ == "__main__":
     dModel = Interpreter(model_path=yoloPath)
     dModel.allocate_tensors()
 
-    mobilePath = "./model.tflite"
+    mobilePath = "./mobilenetv2-128.tflite"
     cModel = Interpreter(model_path=mobilePath)
     cModel.allocate_tensors()
 
