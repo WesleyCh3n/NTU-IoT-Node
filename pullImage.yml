@@ -1,0 +1,7 @@
+---
+- hosts: NTUCowNodes
+  tasks:
+  - name: pull image send
+    shell: docker pull wesleych3n/ntu-iot:send
+    args:
+      warn: no

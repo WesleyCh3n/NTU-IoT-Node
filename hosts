@@ -1,0 +1,11 @@
+# host file
+
+[NTUCowNodes]
+# NTU-CowNode01 ansible_host=127.0.0.1 ansible_port=14101 ansible_user=pi
+# NTU-CowNode02 ansible_host=127.0.0.1 ansible_port=14102 ansible_user=pi
+NTU-CowNode03 ansible_host=127.0.0.1 ansible_port=14103 ansible_user=pi
+NTU-CowNode04 ansible_host=127.0.0.1 ansible_port=14104 ansible_user=pi
+NTU-CowNode05 ansible_host=127.0.0.1 ansible_port=14105 ansible_user=pi
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
