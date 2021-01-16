@@ -9,18 +9,18 @@ from core.utils import *
 
 
 if __name__ == "__main__":
-    refs = np.loadtxt("refs.tsv", dtype=np.float16, delimiter='\t')
+    refs = np.loadtxt("./dataset/19-01.tsv", dtype=np.float16, delimiter='\t')
     print(type(refs[0][0]))
 
-    yoloPath = "./yolov4-tiny-416-fp16.tflite"
+    yoloPath = "./model/yolov4-tiny-416-fp16.tflite"
     dModel = Interpreter(model_path=yoloPath)
     dModel.allocate_tensors()
 
-    mobilePath = "./mobilenetv2-128.tflite"
+    mobilePath = "./model/mobilenetv2-128.tflite"
     cModel = Interpreter(model_path=mobilePath)
     cModel.allocate_tensors()
 
-    imagePath="./NODE29.jpg"
+    imagePath="./src/NODE29.jpg"
     img = cv2.imread(imagePath)
     cvImg = imagePreproccess(imagePath)
     # get model layer info
