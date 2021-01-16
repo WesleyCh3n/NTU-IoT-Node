@@ -44,12 +44,13 @@ eval set -- "$PARAMS"
 # grep which node this is
 RESULT=$(echo $DIR |grep -o "NODE[0-9][0-9]")
 printf "$(date '+%D %T')\n$RESULT starts backing up..."| telegram-send -g --stdin
+mkdir -p /home/data/
 
 while true
 do
     echo "$(date '+%D %T'): backing up"
     # Start rsync
-    OUTPUT=$(sshpass -e rsync -az --out-format="%t %n %'''b" --remove-source-files --timeout 30 -e "ssh -p $PORT -o StrictHostKeyChecking=no" /home/img/ $USER@$IP:$DIR 2>&1)
+    OUTPUT=$(sshpass -e rsync -az --out-format="%t %n %'''b" --remove-source-files --timeout 30 -e "ssh -p $PORT -o StrictHostKeyChecking=no" /home/data/ $USER@$IP:$DIR 2>&1)
     status=$?
     echo "$OUTPUT"
 
