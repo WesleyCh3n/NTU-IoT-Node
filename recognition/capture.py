@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+from tflite_runtime.interpreter import Interpreter
 from picamera import PiCamera
+from pathlib import Path
 import numpy as np
 import time
 import cv2
-from tflite_runtime.interpreter import Interpreter
+import os
 from core.utils import *
-
 
 
 
@@ -35,6 +36,7 @@ if __name__ == "__main__":
         # camera.vflip = True
         # time.sleep(1)
 
+        print("Start Detection")
         i = 0
         while True:
             # pre allocate img space
@@ -43,9 +45,12 @@ if __name__ == "__main__":
             # Start capturing i:index f:frame
             stream = camera.capture_continuous(output, format="rgb")
             for(i, img) in enumerate(stream):
-                f = img.copy()
                 # create file name and save img folder in docker container
-                s = time.time()
+                fileTime = time.strftime("%Y_%m_%d-%H_%M_%S")
+                Path(f"/home/img/{time.strftime('%Y-%m-%d')}/").mkdir(parents=True, exist_ok=True)
+                path = os.path.join(f"/home/img/{time.strftime('%Y-%m-%d')}/", fileTime+'.jpg')
+
+                f = img.copy()
                 f = cv2.resize(f.astype(np.float32), (416,416))/255.
                 dModel.set_tensor(dInput, [f])
                 dModel.invoke()
@@ -53,24 +58,4 @@ if __name__ == "__main__":
                 scores_raw = dModel.get_tensor(dOutputScores).flatten()
                 boxes, scores = fLayerProcess(boxes_raw, scores_raw, 0.6)
                 if len(boxes) > 0:
-                    indices = np.array(cv2.dnn.NMSBoxes(boxes.tolist(),
-                                                        scores.tolist(),
-                                                        0.6, 0.4)).flatten()
-                    vecs = []
-                    for box in boxes[indices]:
-                        # cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
-                        cModel.set_tensor(cInput, 
-                                          cPreproccess(img[box[1]:box[3], box[0]:box[2]]))
-                        cModel.invoke()
-                        output_data = cModel.get_tensor(cOutput)[0]
-                        vecs.append(output_data)
-                    vecs = np.array(vecs)
-                    dists = np.argmin(-2*np.dot(vecs, refs.T)+
-                                      np.sum(refs**2, axis=1)+
-                                      np.sum(vecs**2, axis=1)[:,np.newaxis],
-                                      axis=1)
-                    print(dists)
-                else:
-                    print("nothing")
-                e = time.time()
-                print(f"Spend: {e-s:.3f}")
+                    print(f"{fileTime} - Number: {len(boxes)}")
