@@ -41,10 +41,11 @@ while (( "$#" )); do
 done
 eval set -- "$PARAMS"
 
+mkdir -p /home/data/
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
 # grep which node this is
 RESULT=$(echo $DIR |grep -o "NODE[0-9][0-9]")
 printf "$(date '+%D %T')\n$RESULT starts backing up..."| telegram-send -g --stdin
-mkdir -p /home/data/
 
 while true
 do
