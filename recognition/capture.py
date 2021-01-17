@@ -33,10 +33,11 @@ if __name__ == "__main__":
         # Setting up camera
         camera.resolution = (1280, 960)
         camera.start_preview()
-        # camera.vflip = True
+        camera.vflip = True
+        camera.hflip = True
         # time.sleep(1)
 
-        print("Start Detection")
+        print("Start Detection", flush=True)
         i = 0
         while True:
             # pre allocate img space
@@ -47,8 +48,8 @@ if __name__ == "__main__":
             for(i, img) in enumerate(stream):
                 # create file name and save img folder in docker container
                 fileTime = time.strftime("%Y_%m_%d-%H_%M_%S")
-                Path(f"/home/img/{time.strftime('%Y-%m-%d')}/").mkdir(parents=True, exist_ok=True)
-                path = os.path.join(f"/home/img/{time.strftime('%Y-%m-%d')}/", fileTime+'.jpg')
+                Path(f"/home/data/img/{time.strftime('%Y-%m-%d')}/").mkdir(parents=True, exist_ok=True)
+                imgFile = os.path.join(f"/home/data/img/{time.strftime('%Y-%m-%d')}/", fileTime+'.jpg')
 
                 f = img.copy()
                 f = cv2.resize(f.astype(np.float32), (416,416))/255.
@@ -58,4 +59,7 @@ if __name__ == "__main__":
                 scores_raw = dModel.get_tensor(dOutputScores).flatten()
                 boxes, scores = fLayerProcess(boxes_raw, scores_raw, 0.6)
                 if len(boxes) > 0:
-                    print(f"{fileTime} - Number: {len(boxes)}")
+                    print(f"{fileTime} - Number: {len(boxes)}", flush=True)
+                    cv2.imwrite(imgFile, img[:,:,::-1])
+                    with open(f"/home/data/{time.strftime('%Y-%m-%d')}-detect.csv", "a") as wtr:
+                        wtr.write(f"{fileTime},{len(boxes)}\n")
