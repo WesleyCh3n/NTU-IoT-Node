@@ -1,9 +1,0 @@
----
-- hosts: NTUCowNodes
-  vars_files:
-    - vars.yml
-  tasks:
-  - name: copy stream code
-    synchronize:
-      src: "{{ repository_src_path }}"
-      dest: "{{ repository_path }}"
