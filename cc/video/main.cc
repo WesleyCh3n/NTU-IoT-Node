@@ -14,6 +14,7 @@
 
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
+#include "NumCpp.hpp"
 using namespace std;
 typedef cv::Point3_<float> Pixel;
 
@@ -199,6 +200,10 @@ class CowMonitor{
             // cv::imwrite("raspicam_cv_image.jpg", frame);
             return true;
         }
+        auto RunImage(std::string fileName){
+
+        }
+
     private:
         uint height() const{
             return this->input_tensor->dims->data[1];
