@@ -1,7 +1,9 @@
-CXX := arm-linux-gnueabihf-g++
-CXXFLAGS := -Bstatic -std=c++17
-SRC := main.cc
-PROG := main
+CC := arm-linux-gnueabihf-g++
+CCFLAGS := -Bstatic -std=c++17 -O3
+SRC := ./main.cc
+PROG := ./main
+COWMONITOR_SRC := ./include/cow_monitor.cpp
+COWMONITOR_OBJ := ./cow_monitor.o
 
 TF_DIR := /opt/tensorflow_src
 OPENCV_DIR := /opt/opencv
@@ -16,7 +18,8 @@ INCLUDES := \
 -I$(OPENCV_DIR)/include/opencv4 \
 -I$(RASPICAM_DIR)/include \
 -I$(NUMCPP_DIR)/include/ \
--I$(BOOST_DIR)
+-I$(BOOST_DIR) \
+-I/home/pi/ntu-iot-node/cc/recognition
 
 LIBDIRS := \
 -L$(TF_DIR)/tensorflow/lite/tools/make/gen/rpi_armv7l/lib \
@@ -48,13 +51,16 @@ LIBS := \
 -lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util
 
 
-$(PROG):$(SRC)
+$(PROG):$(SRC) $(COWMONITOR_OBJ)
 	@echo "Compiling Start"
-	@$(CXX) $(CXXFLAGS) -o $(PROG) $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
-	
-	@# `pkg-config --cflags --libs --static opencv4`
+	@$(CC) $(CCFLAGS) -o $(PROG) ./include/cow_monitor.o $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
+	@rm main.o
 	@echo "Compiling Complete"
 
+$(COWMONITOR_OBJ):$(COWMONITOR_SRC)
+	@echo "Compiling CowMonitor class"
+	@$(CC) $(CCFLAGS) -c $(COWMONITOR_SRC) $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
+	@mv ./cow_monitor.o ./include/cow_monitor.o
 .PHONY: clean
 clean:
-	rm $(EXE)
+	rm -f $(PROG) ./include/cow_monitor.o main.o
