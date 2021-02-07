@@ -1,9 +1,15 @@
 CC := arm-linux-gnueabihf-g++
 CCFLAGS := -Bstatic -std=c++17 -O3
-SRC := ./main.cc
-PROG := ./main
-COWMONITOR_SRC := ./include/cow_monitor.cpp
-COWMONITOR_OBJ := ./cow_monitor.o
+
+ifeq ($(RELEASE),1)
+	CCFLAGS += -DRELEASE
+endif
+
+SRC := main.cc
+PROG := main
+
+COWMONITOR_SRC := include/cow_monitor.cpp
+COWMONITOR_OBJ := cow_monitor.o
 
 TF_DIR := /opt/tensorflow_src
 OPENCV_DIR := /opt/opencv
@@ -52,15 +58,16 @@ LIBS := \
 
 
 $(PROG):$(SRC) $(COWMONITOR_OBJ)
-	@echo "Compiling Start"
-	@$(CC) $(CCFLAGS) -o $(PROG) ./include/cow_monitor.o $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
+	@echo "Compiling $(PROG)"
+	@$(CC) $(CCFLAGS) -o $(PROG) include/cow_monitor.o $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
 	@rm main.o
 	@echo "Compiling Complete"
 
 $(COWMONITOR_OBJ):$(COWMONITOR_SRC)
-	@echo "Compiling CowMonitor class"
+	@echo "Compiling $(COWMONITOR_OBJ)"
 	@$(CC) $(CCFLAGS) -c $(COWMONITOR_SRC) $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
-	@mv ./cow_monitor.o ./include/cow_monitor.o
+	@mv cow_monitor.o include/cow_monitor.o
+
 .PHONY: clean
 clean:
-	rm -f $(PROG) ./include/cow_monitor.o main.o
+	rm -f $(PROG) include/cow_monitor.o main.o
