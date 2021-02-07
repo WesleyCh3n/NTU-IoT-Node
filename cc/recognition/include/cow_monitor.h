@@ -56,13 +56,13 @@ namespace cm{
     };
 
     namespace model{
-
-
         template<typename T>
         auto cvtTensor(TfLiteTensor* tensor) -> std::vector<T>;
         auto cvtTensor(TfLiteTensor* tensor) -> std::vector<float>;
 
         namespace yolov4{
+            const float CON_THRES = 0.6;
+            const float NMS_THRES = 0.4;
             void norm(Pixel &);
         }
         namespace mobilenetv2{

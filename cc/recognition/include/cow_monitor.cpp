@@ -102,7 +102,7 @@ auto CowMonitor::yoloResult(vector<float> &box,
         return false;
 
     vector<int> ids;
-    cv::dnn::NMSBoxes(rects, scores, thres, 0.4, ids);
+    cv::dnn::NMSBoxes(rects, scores, thres, cm::model::yolov4::NMS_THRES, ids);
     if(ids.empty())
         return false;
     for(int tmp: ids){
@@ -120,7 +120,7 @@ auto CowMonitor::Detection(cv::Mat inputImg, std::vector<cv::Rect> &result_box) 
     d_interpreter_->Invoke();
     vector<float> box_vec = cm::model::cvtTensor(d_output_box_);
     vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
-    return yoloResult(box_vec, score_vec, 0.6, result_box);
+    return yoloResult(box_vec, score_vec, cm::model::yolov4::CON_THRES, result_box);
 }
 
 auto CowMonitor::Stream(int width, int height) -> bool{
