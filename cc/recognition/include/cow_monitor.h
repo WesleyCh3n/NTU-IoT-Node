@@ -29,8 +29,7 @@ namespace cm{
             uint channel;
         };
         public:
-            CowMonitor(){
-            };
+            CowMonitor(){};
 
             auto Init(std::string model_path[], int MODE) -> bool;
             auto initdModel(std::string model_path) -> bool;
@@ -51,8 +50,7 @@ namespace cm{
             TfLiteTensor* d_input_tensor_ = nullptr;
             TfLiteTensor* d_output_box_ = nullptr;
             TfLiteTensor* d_output_score_ = nullptr;
-            int vW_;
-            int vH_;
+            int vW_, vH_;
     };
 
     namespace model{
