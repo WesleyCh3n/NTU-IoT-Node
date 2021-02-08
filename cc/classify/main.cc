@@ -54,8 +54,8 @@ int main(){
     std::cout << '\n';
     // Output: 1 224 224 3
 
-    int height = input_tensor->dims->data[1];
-    int width = input_tensor->dims->data[2];
+    int height  = input_tensor->dims->data[1];
+    int width   = input_tensor->dims->data[2];
     int channel = input_tensor->dims->data[3];
 
     // read image file

@@ -18,8 +18,8 @@ namespace cm{
 
     typedef cv::Point3_<float> Pixel;
 
-    const int DETECT = 0;
-    const int CLASSIFY = 1;
+    const int DETECT    = 0;
+    const int CLASSIFY  = 1;
     const int RECOGNIZE = 2;
 
     class CowMonitor{
@@ -48,12 +48,12 @@ namespace cm{
             std::unique_ptr<tflite::FlatBufferModel> d_model_;
             std::unique_ptr<tflite::Interpreter> d_interpreter_;
             TfLiteTensor* d_input_tensor_ = nullptr;
-            TfLiteTensor* d_output_box_ = nullptr;
+            TfLiteTensor* d_output_box_   = nullptr;
             TfLiteTensor* d_output_score_ = nullptr;
             InputDim c_input_dim_;
             std::unique_ptr<tflite::FlatBufferModel> c_model_;
             std::unique_ptr<tflite::Interpreter> c_interpreter_;
-            TfLiteTensor* c_input_tensor_ = nullptr;
+            TfLiteTensor* c_input_tensor_  = nullptr;
             TfLiteTensor* c_output_tensor_ = nullptr;
             int vW_, vH_;
     };

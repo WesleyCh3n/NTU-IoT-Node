@@ -146,7 +146,8 @@ auto CowMonitor::Detection(cv::Mat inputImg,
     d_interpreter_->Invoke();
     vector<float> box_vec = cm::model::cvtTensor(d_output_box_);
     vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
-    return yoloResult(box_vec, score_vec, cm::model::yolov4::CON_THRES, result_box);
+    return yoloResult(box_vec, score_vec,
+                      cm::model::yolov4::CON_THRES, result_box);
 }
 
 auto CowMonitor::Classification(cv::Mat inputImg,
