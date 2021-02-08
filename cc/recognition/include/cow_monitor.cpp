@@ -102,7 +102,9 @@ auto CowMonitor::yoloResult(vector<float> &box,
                 vector<float> &score,
                 float thres,
                 vector<cv::Rect> &result) -> bool{
-
+    /*************************************/
+    /* result: cv:Rect(xmin, ymin, w, h) */
+    /*************************************/
     auto it = std::find_if(std::begin(score), std::end(score),
                            [&thres](float i){return i > thres;});
     vector<cv::Rect> rects;
@@ -124,7 +126,6 @@ auto CowMonitor::yoloResult(vector<float> &box,
     }
     if(rects.empty())
         return false;
-
     vector<int> ids;
     cv::dnn::NMSBoxes(rects, scores, thres, cm::model::yolov4::NMS_THRES, ids);
     if(ids.empty())
@@ -135,7 +136,7 @@ auto CowMonitor::yoloResult(vector<float> &box,
     return true;
 }
 
-auto CowMonitor::Detection(cv::Mat inputImg,
+auto CowMonitor::detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool{
     inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
                              cm::model::yolov4::norm);
@@ -144,25 +145,28 @@ auto CowMonitor::Detection(cv::Mat inputImg,
            d_input_dim_.height * d_input_dim_.height *
            d_input_dim_.channel * sizeof(float));
     d_interpreter_->Invoke();
-    vector<float> box_vec = cm::model::cvtTensor(d_output_box_);
+    vector<float> box_vec   = cm::model::cvtTensor(d_output_box_);
     vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
     return yoloResult(box_vec, score_vec,
                       cm::model::yolov4::CON_THRES, result_box);
 }
 
-auto CowMonitor::Classification(cv::Mat inputImg,
-                                std::vector<cv::Rect> result_box) -> bool{
-    inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
-                             cm::model::yolov4::norm);
-    // flatten rgb image to input layer.
-    memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
-           d_input_dim_.height * d_input_dim_.height *
-           d_input_dim_.channel * sizeof(float));
-    d_interpreter_->Invoke();
-    vector<float> box_vec = cm::model::cvtTensor(d_output_box_);
-    vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
-    return yoloResult(box_vec, score_vec, cm::model::yolov4::CON_THRES, result_box);
-}
+/* auto CowMonitor::classification(cv::Mat inputImg,
+ *                                 std::vector<cv::Rect> result_box) -> bool{
+ *     // for(cv::Rect roi: result_box){
+ *     //
+ *     // }
+ *     // inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
+ *     //                          cm::model::yolov4::norm);
+ *     // // flatten rgb image to input layer.
+ *     // memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
+ *     //        d_input_dim_.height * d_input_dim_.height *
+ *     //        d_input_dim_.channel * sizeof(float));
+ *     // d_interpreter_->Invoke();
+ *     // vector<float> box_vec   = cm::model::cvtTensor(d_output_box_);
+ *     // vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
+ *     // return true;
+ * } */
 
 auto CowMonitor::Stream(int width, int height) -> bool{
     std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -202,7 +206,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         Camera.grab();
         Camera.retrieve(frame);
         vector<cv::Rect> result_box;
-        if(Detection(frame, result_box)){
+        if(detection(frame, result_box)){
             printf("\tThere are %d\n", result_box.size());
             fflush(stdout);
 #ifdef RELEASE
@@ -231,9 +235,19 @@ auto CowMonitor::Stream(int width, int height) -> bool{
     return true;
 }
 
-auto CowMonitor::RunImage(std::string fileName){
+auto CowMonitor::RunImage(std::string fileName) -> void{
+    cv::Mat img = cv::imread(fileName);
+    vW_ = img.cols;
+    vH_ = img.rows;
+    vector<cv::Rect> result_box;
+    int i = 0;
+    if(detection(img, result_box)){
+        for(cv::Rect roi: result_box){
+            cv::imwrite(boost::str(boost::format("%02d.jpg")%i), img(roi));
+            i++;
+        }
+    }
 }
-
 
 /*=================== Other namespace definition ===================*/
 

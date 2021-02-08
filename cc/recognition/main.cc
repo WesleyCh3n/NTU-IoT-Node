@@ -13,5 +13,6 @@ int main(){
         return -1;
     }
     if(!cow_monitor.Stream()) cerr << "Stop!\n";
+    // cow_monitor.RunImage("./tests/NODE29.jpg");
     return 0;
 }

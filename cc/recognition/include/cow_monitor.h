@@ -38,10 +38,10 @@ namespace cm{
                                void (*norm)(Pixel&)) -> cv::Mat;
             auto yoloResult(std::vector<float> &box, std::vector<float> &score,
                             float thres, std::vector<cv::Rect> &result) -> bool;
-            auto Detection(cv::Mat inputImg,
+            auto detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool;
             auto Stream(int width=1280, int height=960) -> bool;
-            auto RunImage(std::string fileName);
+            auto RunImage(std::string fileName) -> void;
 
         private:
             InputDim d_input_dim_;
