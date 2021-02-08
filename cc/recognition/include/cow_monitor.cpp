@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <array>
 #include <chrono>
 #include <ctime>
 #include <filesystem>
@@ -61,6 +62,8 @@ auto CowMonitor::initdModel(std::string model_path) -> bool{
     d_input_dim_.height = d_input_tensor_->dims->data[1];
     d_input_dim_.width = d_input_tensor_->dims->data[2];
     d_input_dim_.channel = d_input_tensor_->dims->data[3];
+    printf("Input size: %d %d %d\n",
+           d_input_dim_.height, d_input_dim_.width, d_input_dim_.channel);
     return true;
 }
 
@@ -77,6 +80,8 @@ auto CowMonitor::initcModel(std::string model_path) -> bool{
     c_input_dim_.height = c_input_tensor_->dims->data[1];
     c_input_dim_.width = c_input_tensor_->dims->data[2];
     c_input_dim_.channel = c_input_tensor_->dims->data[3];
+    printf("Input size: %d %d %d\n",
+           c_input_dim_.height, c_input_dim_.width, c_input_dim_.channel);
     return true;
 }
 
@@ -151,22 +156,29 @@ auto CowMonitor::detection(cv::Mat inputImg,
                       cm::model::yolov4::CON_THRES, result_box);
 }
 
-/* auto CowMonitor::classification(cv::Mat inputImg,
- *                                 std::vector<cv::Rect> result_box) -> bool{
- *     // for(cv::Rect roi: result_box){
- *     //
- *     // }
- *     // inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
- *     //                          cm::model::yolov4::norm);
- *     // // flatten rgb image to input layer.
- *     // memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
- *     //        d_input_dim_.height * d_input_dim_.height *
- *     //        d_input_dim_.channel * sizeof(float));
- *     // d_interpreter_->Invoke();
- *     // vector<float> box_vec   = cm::model::cvtTensor(d_output_box_);
- *     // vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
- *     // return true;
- * } */
+auto CowMonitor::classification(cv::Mat inputImg,
+                                std::vector<cv::Rect> result_box) -> bool{
+    // int i=0;
+    /* TODO: Use stack method with fix output size(128) & result(6)
+     * std::array<std::array<float, 128>, 6> results; */
+    std::vector< std::vector<float> > results;
+    for(cv::Rect roi: result_box){
+        cv::Mat cropImg = inputImg(roi);
+        // cv::imwrite(boost::str(boost::format("%02d.jpg")%i), cropImg);
+        // i++;
+        cropImg = matPreprocess(cropImg,
+                                 c_input_dim_.width, c_input_dim_.height,
+                                 cm::model::mobilenetv2::norm);
+        memcpy(c_input_tensor_->data.f, cropImg.ptr<float>(0),
+               c_input_dim_.height * c_input_dim_.height *
+               c_input_dim_.channel * sizeof(float));
+        c_interpreter_->Invoke();
+        results.emplace_back(cm::model::cvtTensor(c_output_tensor_));
+    }
+    nc::NdArray<float> tmp(results);
+    std::cout << tmp << '\n';
+    return true;
+}
 
 auto CowMonitor::Stream(int width, int height) -> bool{
     std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -240,12 +252,9 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
     vW_ = img.cols;
     vH_ = img.rows;
     vector<cv::Rect> result_box;
-    int i = 0;
+    // int i = 0;
     if(detection(img, result_box)){
-        for(cv::Rect roi: result_box){
-            cv::imwrite(boost::str(boost::format("%02d.jpg")%i), img(roi));
-            i++;
-        }
+        classification(img, result_box);
     }
 }
 

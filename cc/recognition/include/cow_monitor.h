@@ -40,6 +40,8 @@ namespace cm{
                             float thres, std::vector<cv::Rect> &result) -> bool;
             auto detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool;
+            auto classification(cv::Mat inputImg,
+                                std::vector<cv::Rect> result_box) -> bool;
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName) -> void;
 
