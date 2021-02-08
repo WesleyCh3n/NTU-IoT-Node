@@ -48,7 +48,7 @@ auto CowMonitor::Init(std::string model_path[], int MODE) -> bool{
 }
 
 auto CowMonitor::initdModel(std::string model_path) -> bool{
-    printf("Initialize Detection Model\n");
+    printf("Initialize Detection Model: %s\n", model_path.c_str());
     d_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver d_resolver;
     tflite::InterpreterBuilder(*d_model_.get(), d_resolver)(&d_interpreter_);
@@ -65,7 +65,7 @@ auto CowMonitor::initdModel(std::string model_path) -> bool{
 }
 
 auto CowMonitor::initcModel(std::string model_path) -> bool{
-    printf("Initialize Classification Model\n");
+    printf("Initialize Classification Model: %s\n", model_path.c_str());
     c_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver c_resolver;
     tflite::InterpreterBuilder(*c_model_.get(), c_resolver)(&c_interpreter_);
@@ -80,7 +80,8 @@ auto CowMonitor::initcModel(std::string model_path) -> bool{
     return true;
 }
 
-auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height) -> cv::Mat{
+auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height,
+                               void (*norm)(Pixel&)) -> cv::Mat{
     // convert to float; BGR -> RGB
     cv::Mat dst;
     src.convertTo(dst, CV_32FC3);
@@ -90,7 +91,7 @@ auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height) -> cv::Mat
     Pixel* pixel = dst.ptr<Pixel>(0,0);
     const Pixel* endPixel = pixel + dst.cols * dst.rows;
     for (; pixel != endPixel; pixel++)
-        cm::model::yolov4::norm(*pixel);
+        norm(*pixel);
 
     // resize image as model input
     cv::resize(dst, dst, cv::Size(width, height));
@@ -134,8 +135,24 @@ auto CowMonitor::yoloResult(vector<float> &box,
     return true;
 }
 
-auto CowMonitor::Detection(cv::Mat inputImg, std::vector<cv::Rect> &result_box) -> bool{
-    inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height);
+auto CowMonitor::Detection(cv::Mat inputImg,
+                           std::vector<cv::Rect> &result_box) -> bool{
+    inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
+                             cm::model::yolov4::norm);
+    // flatten rgb image to input layer.
+    memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
+           d_input_dim_.height * d_input_dim_.height *
+           d_input_dim_.channel * sizeof(float));
+    d_interpreter_->Invoke();
+    vector<float> box_vec = cm::model::cvtTensor(d_output_box_);
+    vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
+    return yoloResult(box_vec, score_vec, cm::model::yolov4::CON_THRES, result_box);
+}
+
+auto CowMonitor::Classification(cv::Mat inputImg,
+                                std::vector<cv::Rect> result_box) -> bool{
+    inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
+                             cm::model::yolov4::norm);
     // flatten rgb image to input layer.
     memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
            d_input_dim_.height * d_input_dim_.height *

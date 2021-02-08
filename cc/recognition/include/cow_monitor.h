@@ -34,12 +34,12 @@ namespace cm{
             auto Init(std::string model_path[], int MODE) -> bool;
             auto initdModel(std::string model_path) -> bool;
             auto initcModel(std::string model_path) -> bool;
-            auto matPreprocess(cv::Mat &src, uint width, uint height) -> cv::Mat;
-            auto yoloResult(std::vector<float> &box,
-                    std::vector<float> &score,
-                    float thres,
-                    std::vector<cv::Rect> &result) -> bool;
-            auto Detection(cv::Mat inputImg, std::vector<cv::Rect> &result_box) -> bool;
+            auto matPreprocess(cv::Mat &src, uint width, uint height,
+                               void (*norm)(Pixel&)) -> cv::Mat;
+            auto yoloResult(std::vector<float> &box, std::vector<float> &score,
+                            float thres, std::vector<cv::Rect> &result) -> bool;
+            auto Detection(cv::Mat inputImg,
+                           std::vector<cv::Rect> &result_box) -> bool;
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName);
 
