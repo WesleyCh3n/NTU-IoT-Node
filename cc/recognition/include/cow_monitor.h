@@ -50,6 +50,11 @@ namespace cm{
             TfLiteTensor* d_input_tensor_ = nullptr;
             TfLiteTensor* d_output_box_ = nullptr;
             TfLiteTensor* d_output_score_ = nullptr;
+            InputDim c_input_dim_;
+            std::unique_ptr<tflite::FlatBufferModel> c_model_;
+            std::unique_ptr<tflite::Interpreter> c_interpreter_;
+            TfLiteTensor* c_input_tensor_ = nullptr;
+            TfLiteTensor* c_output_tensor_ = nullptr;
             int vW_, vH_;
     };
 

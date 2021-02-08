@@ -32,10 +32,17 @@ auto CowMonitor::Init(std::string model_path[], int MODE) -> bool{
             return d_status;
             break;
         }
-        case cm::CLASSIFY:
+        case cm::CLASSIFY:{
+            bool s_status = initcModel(model_path[1]);
+            return s_status;
             break;
-        case cm::RECOGNIZE:
+        }
+        case cm::RECOGNIZE:{
+            bool d_status = initdModel(model_path[0]);
+            bool s_status = initcModel(model_path[1]);
+            return (d_status && s_status);
             break;
+        }
     }
     return false;
 }
@@ -54,6 +61,22 @@ auto CowMonitor::initdModel(std::string model_path) -> bool{
     d_input_dim_.height = d_input_tensor_->dims->data[1];
     d_input_dim_.width = d_input_tensor_->dims->data[2];
     d_input_dim_.channel = d_input_tensor_->dims->data[3];
+    return true;
+}
+
+auto CowMonitor::initcModel(std::string model_path) -> bool{
+    printf("Initialize Classification Model\n");
+    c_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
+    tflite::ops::builtin::BuiltinOpResolver c_resolver;
+    tflite::InterpreterBuilder(*c_model_.get(), c_resolver)(&c_interpreter_);
+    c_interpreter_->AllocateTensors();
+
+    c_input_tensor_ = c_interpreter_->tensor(c_interpreter_->inputs()[0]);
+    c_output_tensor_ = c_interpreter_->tensor(c_interpreter_->outputs()[0]);
+
+    c_input_dim_.height = c_input_tensor_->dims->data[1];
+    c_input_dim_.width = c_input_tensor_->dims->data[2];
+    c_input_dim_.channel = c_input_tensor_->dims->data[3];
     return true;
 }
 
