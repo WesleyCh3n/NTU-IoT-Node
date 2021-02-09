@@ -1,3 +1,5 @@
+#include "include/cow_monitor.h"
+
 #include <iostream>
 
 #include <array>
@@ -5,6 +7,7 @@
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <vector>
 
@@ -17,16 +20,42 @@
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
 #include "NumCpp.hpp"
-#include "include/cow_monitor.h"
 
 using namespace std;
 using namespace cm;
 
+nc::NdArray<float> REFS;
+
+class Timer{
+    public:
+        Timer(){
+            stTimePt_ = std::chrono::high_resolution_clock::now();
+        }
+        ~Timer(){
+            Stop();
+        }
+        void Stop(){
+            auto endTimePt = std::chrono::high_resolution_clock::now();
+            auto start = std::chrono::time_point_cast<std::chrono::microseconds>
+                         (stTimePt_).time_since_epoch().count();
+            auto end = std::chrono::time_point_cast<std::chrono::microseconds>
+                         (endTimePt).time_since_epoch().count();
+            auto duration = end - start;
+            std::cout << "duration: " << duration << "us\n";
+        }
+    private:
+        std::chrono::time_point<std::chrono::high_resolution_clock> stTimePt_;
+};
 
 /*=================== CowMonitor Class definition ===================*/
 
-auto CowMonitor::Init(std::string model_path[], int MODE) -> bool{
+bool CowMonitor::Init(std::string model_path[], std::string ref, int MODE){
     cout << "MODE: " << MODE << '\n';
+    if(!ref.empty()){
+        nc::NdArray<float> tmp(cm::model::readTSV(ref));
+        REFS = tmp;
+        refs_ = cm::model::readTSV(ref);
+    }
     switch(MODE){
         case cm::DETECT:{
             bool d_status = initdModel(model_path[0]);
@@ -48,7 +77,8 @@ auto CowMonitor::Init(std::string model_path[], int MODE) -> bool{
     return false;
 }
 
-auto CowMonitor::initdModel(std::string model_path) -> bool{
+
+bool CowMonitor::initdModel(std::string model_path){
     printf("Initialize Detection Model: %s\n", model_path.c_str());
     d_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver d_resolver;
@@ -67,7 +97,7 @@ auto CowMonitor::initdModel(std::string model_path) -> bool{
     return true;
 }
 
-auto CowMonitor::initcModel(std::string model_path) -> bool{
+bool CowMonitor::initcModel(std::string model_path){
     printf("Initialize Classification Model: %s\n", model_path.c_str());
     c_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver c_resolver;
@@ -103,27 +133,31 @@ auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height,
     return dst;
 }
 
+/**
+ * Find valid bbox by confidence and non-maximum suppression
+ *
+ * @param[in] box: result of yolo bbox
+ * @param[in] score: result of yolo score
+ * @param[out] result: valid bbox with cv::Rect(xmin,xmax,w,h) as vector
+ */
 auto CowMonitor::yoloResult(vector<float> &box,
                 vector<float> &score,
                 float thres,
                 vector<cv::Rect> &result) -> bool{
-    /*************************************/
-    /* result: cv:Rect(xmin, ymin, w, h) */
-    /*************************************/
     auto it = std::find_if(std::begin(score), std::end(score),
                            [&thres](float i){return i > thres;});
     vector<cv::Rect> rects;
     vector<float> scores;
     while (it != std::end(score)) {
-        size_t id = std::distance(std::begin(score), it);
-        const int cx = box[4*id];
-        const int cy = box[4*id+1];
-        const int w = box[4*id+2];
-        const int h = box[4*id+3];
-        const int xmin = ((cx-(w/2.f))/d_input_dim_.width)*vW_;
-        const int ymin = ((cy-(h/2.f))/d_input_dim_.height)*vH_;
-        const int xmax = ((cx+(w/2.f))/d_input_dim_.width)*vW_;
-        const int ymax = ((cy+(h/2.f))/d_input_dim_.height)*vH_;
+        size_t id      = std::distance(std::begin(score), it);
+        const int cx   = box[4*id];
+        const int cy   = box[4*id+1];
+        const int w    = box[4*id+2];
+        const int h    = box[4*id+3];
+        const int xmin = ((cx-(w/2.f))/d_input_dim_.width) * vW_;
+        const int ymin = ((cy-(h/2.f))/d_input_dim_.height) * vH_;
+        const int xmax = ((cx+(w/2.f))/d_input_dim_.width) * vW_;
+        const int ymax = ((cy+(h/2.f))/d_input_dim_.height) * vH_;
         rects.emplace_back(cv::Rect(xmin, ymin, xmax-xmin, ymax-ymin));
         scores.emplace_back(score[id]);
         it = std::find_if(std::next(it), std::end(score),
@@ -161,7 +195,7 @@ auto CowMonitor::classification(cv::Mat inputImg,
     // int i=0;
     /* TODO: Use stack method with fix output size(128) & result(6)
      * std::array<std::array<float, 128>, 6> results; */
-    std::vector< std::vector<float> > results;
+    std::vector< std::vector<float> > vecs;
     for(cv::Rect roi: result_box){
         cv::Mat cropImg = inputImg(roi);
         // cv::imwrite(boost::str(boost::format("%02d.jpg")%i), cropImg);
@@ -173,10 +207,18 @@ auto CowMonitor::classification(cv::Mat inputImg,
                c_input_dim_.height * c_input_dim_.height *
                c_input_dim_.channel * sizeof(float));
         c_interpreter_->Invoke();
-        results.emplace_back(cm::model::cvtTensor(c_output_tensor_));
+        vecs.emplace_back(cm::model::cvtTensor(c_output_tensor_));
     }
-    nc::NdArray<float> tmp(results);
-    std::cout << tmp << '\n';
+    {
+        Timer timer;
+        nc::NdArray<float> results(vecs);
+        nc::NdArray<uint> c;
+        c = nc::argmin(-2.f * nc::dot(results, REFS.transpose()) +
+                nc::repeat(nc::sum(nc::square(results), nc::Axis::COL).transpose(), 1, REFS.shape().rows) +
+                nc::repeat(nc::sum(nc::square(REFS), nc::Axis::COL), results.shape().rows, 1),
+                nc::Axis::COL);
+        std::cout << c << '\n';
+    }
     return true;
 }
 
@@ -259,6 +301,23 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
 }
 
 /*=================== Other namespace definition ===================*/
+
+auto cm::model::readTSV(std::string file) -> std::vector< std::vector<float> >{
+    std::vector< std::vector<float> > vecs;
+    std::ifstream inFile(file);
+    std::string line;
+
+    while(getline(inFile, line)){
+        std::stringstream ss(line);
+        std::vector<float> vec;
+        std::string tmp;
+        while(getline(ss, tmp, '\t')) {
+            vec.push_back(std::stof(tmp));
+        }
+        vecs.push_back(vec);
+    }
+    return vecs;
+}
 
 auto cm::model::cvtTensor(TfLiteTensor* tensor) -> std::vector<float>{
     int nelem = 1;

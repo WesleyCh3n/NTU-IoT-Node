@@ -31,7 +31,8 @@ namespace cm{
         public:
             CowMonitor(){};
 
-            auto Init(std::string model_path[], int MODE) -> bool;
+            auto Init(std::string model_path[], std::string ref,
+                      int MODE) -> bool;
             auto initdModel(std::string model_path) -> bool;
             auto initcModel(std::string model_path) -> bool;
             auto matPreprocess(cv::Mat &src, uint width, uint height,
@@ -46,6 +47,7 @@ namespace cm{
             auto RunImage(std::string fileName) -> void;
 
         private:
+            std::vector< std::vector<float> > refs_;
             InputDim d_input_dim_;
             std::unique_ptr<tflite::FlatBufferModel> d_model_;
             std::unique_ptr<tflite::Interpreter> d_interpreter_;
@@ -64,6 +66,10 @@ namespace cm{
         template<typename T>
         auto cvtTensor(TfLiteTensor* tensor) -> std::vector<T>;
         auto cvtTensor(TfLiteTensor* tensor) -> std::vector<float>;
+
+        template<typename T>
+        auto readTSV(std::string file) -> std::vector< std::vector<T> >;
+        auto readTSV(std::string file) -> std::vector< std::vector<float> >;
 
         namespace yolov4{
             const float CON_THRES = 0.6;
