@@ -299,6 +299,8 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
     if(detection(img, result_box)){
         std::array<int,4> result_ids = { -1,-1,-1,-1 };
         classification(img, result_box, result_ids);
+        for(auto id:result_ids)
+            std::cout << id << " ";
     }
 }
 
