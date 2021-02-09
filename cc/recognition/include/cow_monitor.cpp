@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <ctime>
@@ -17,14 +18,13 @@
 #include "tensorflow/lite/model.h"
 
 #include "boost/format.hpp"
+#include "boost/math/tools/norms.hpp"
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
-#include "NumCpp.hpp"
 
 using namespace std;
 using namespace cm;
 
-nc::NdArray<float> REFS;
 
 class Timer{
     public:
@@ -53,8 +53,6 @@ class Timer{
 bool CowMonitor::Init(std::string model_path[], std::string ref, int MODE){
     cout << "MODE: " << MODE << '\n';
     if(!ref.empty()){
-        nc::NdArray<float> tmp(cm::model::readTSV(ref));
-        REFS = tmp;
         refs_ = cm::model::readTSV(ref);
     }
     switch(MODE){
@@ -193,9 +191,9 @@ auto CowMonitor::detection(cv::Mat inputImg,
 
 auto CowMonitor::classification(cv::Mat inputImg,
                                 std::vector<cv::Rect> result_box) -> bool{
-    // int i=0;
     /* TODO: Use stack method with fix output size(128) & result(6)
      * std::array<std::array<float, 128>, 6> results; */
+    Timer timer;
     std::vector< std::vector<float> > vecs;
     for(cv::Rect roi: result_box){
         cv::Mat cropImg = inputImg(roi);
@@ -210,16 +208,16 @@ auto CowMonitor::classification(cv::Mat inputImg,
         c_interpreter_->Invoke();
         vecs.emplace_back(cm::model::cvtTensor(c_output_tensor_));
     }
-    {
-        Timer timer;
-        nc::NdArray<float> results(vecs);
-        nc::NdArray<uint> c;
-        c = nc::argmin(-2.f * nc::dot(results, REFS.transpose()) +
-                nc::repeat(nc::sum(nc::square(results), nc::Axis::COL).transpose(), 1, REFS.shape().rows) +
-                nc::repeat(nc::sum(nc::square(REFS), nc::Axis::COL), results.shape().rows, 1),
-                nc::Axis::COL);
-        std::cout << c << '\n';
+    for(int i=0; i<vecs.size(); i++){
+        std::array<float, 19> tmp;
+        for(int k=0; k<refs_.size(); k++){
+            // tmp.emplace_back(boost::math::tools::l2_distance(vecs[i],refs_[k]));
+            tmp[k] = boost::math::tools::l2_distance(vecs[i],refs_[k]);
+        }
+        std::cout << std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
+        std::cout << " ";
     }
+    std::cout << "\n";
     return true;
 }
 
