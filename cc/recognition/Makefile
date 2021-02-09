@@ -15,7 +15,6 @@ TF_DIR := /opt/tensorflow_src
 OPENCV_DIR := /opt/opencv
 RASPICAM_DIR := /opt/raspicam
 VC_DIR := /opt/vc
-NUMCPP_DIR := /opt/NumCpp
 BOOST_DIR := /opt/boost_1_75_0
 
 INCLUDES := \
@@ -23,7 +22,6 @@ INCLUDES := \
 -I$(TF_DIR) \
 -I$(OPENCV_DIR)/include/opencv4 \
 -I$(RASPICAM_DIR)/include \
--I$(NUMCPP_DIR)/include/ \
 -I$(BOOST_DIR) \
 -I/home/pi/ntu-iot-node/cc/recognition
 
