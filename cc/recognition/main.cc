@@ -13,6 +13,7 @@ int main(){
         return -1;
     }
     // if(!cow_monitor.Stream()) cerr << "Stop!\n";
-    cow_monitor.RunImage("./tests/NODE29.jpg");
+    // cow_monitor.RunImage("./tests/NODE29.jpg");
+    cow_monitor.RunImage("./tests/2021_01_26-22_50_47.jpg");
     return 0;
 }

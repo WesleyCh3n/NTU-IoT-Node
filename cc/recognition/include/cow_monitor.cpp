@@ -22,7 +22,6 @@
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
 
-#define CLASS_NUM 19
 
 using namespace std;
 using namespace cm;
@@ -170,7 +169,7 @@ auto CowMonitor::yoloResult(vector<float> &box,
     cv::dnn::NMSBoxes(rects, scores, thres, cm::model::yolov4::NMS_THRES, ids);
     if(ids.empty())
         return false;
-    for(int tmp: ids){
+    for(int &tmp: ids){
         result.emplace_back(rects[tmp]);
     }
     return true;
@@ -180,7 +179,6 @@ auto CowMonitor::detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool{
     inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
                              cm::model::yolov4::norm);
-    // flatten rgb image to input layer.
     memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
            d_input_dim_.height * d_input_dim_.height *
            d_input_dim_.channel * sizeof(float));
@@ -193,7 +191,7 @@ auto CowMonitor::detection(cv::Mat inputImg,
 
 auto CowMonitor::classification(cv::Mat inputImg,
                                 std::vector<cv::Rect> detect_box,
-                                std::array<int, 4> &result) -> void{
+                                std::array<int, MAX_NUM_PF> &result) -> void{
     /* TODO: Use stack method with fix output size(128) & result(6)
      * std::array<std::array<float, 128>, 6> results; */
 #ifdef BENCHMARK
@@ -267,7 +265,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
 #ifdef RELEASE
             std::filesystem::current_path(img_dir);
             cv::imwrite(YMD+"-"+HMS+".jpg", frame);
-            csvFile << YMD+"-"+HMS+".jpg"<< ","
+            csvFile << YMD+"-"+HMS << ","
                     << std::to_string(result_box.size()) << '\n';
             csvFile.flush();
 #endif
@@ -294,11 +292,30 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
     cv::Mat img = cv::imread(fileName);
     vW_ = img.cols;
     vH_ = img.rows;
+    cv::Rect nValue(-1,-1,-1,-1);
     vector<cv::Rect> result_box;
-    // int i = 0;
     if(detection(img, result_box)){
-        std::array<int,4> result_ids = { -1,-1,-1,-1 };
+        for(cv::Rect box:result_box)
+            cv::rectangle(img, tmp, cv::Scalar(0, 255, 0), 3);
+        cv::imwrite("./result.jpg", img);
+        std::array<int,MAX_NUM_PF> result_ids;
+        std::fill_n(result_ids.begin(), MAX_NUM_PF, -1);
         classification(img, result_box, result_ids);
+        {
+            std::ofstream csvFile("./detect.csv", std::ios::app);
+            Timer timer;
+            std::fill_n(std::back_inserter(result_box),
+                        MAX_NUM_PF-result_box.size(), nValue);
+            for(int &id:result_ids){
+                csvFile << id << ",";
+            }
+            std::for_each(result_box.begin(), result_box.end(),
+                    [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
+                                                << tmp.y << ";"
+                                                << tmp.width << ";"
+                                                << tmp.height << ","; });
+            csvFile << "\n";
+        }
         for(auto id:result_ids)
             std::cout << id << " ";
     }
@@ -316,9 +333,9 @@ auto cm::model::readTSV(std::string file) -> std::vector< std::vector<float> >{
         std::vector<float> vec;
         std::string tmp;
         while(getline(ss, tmp, '\t')) {
-            vec.push_back(std::stof(tmp));
+            vec.emplace_back(std::stof(tmp));
         }
-        vecs.push_back(vec);
+        vecs.emplace_back(vec);
     }
     return vecs;
 }

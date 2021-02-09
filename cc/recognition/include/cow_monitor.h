@@ -10,6 +10,8 @@
 #include "tensorflow/lite/model.h"
 
 #include "opencv2/opencv.hpp"
+#define CLASS_NUM 19
+#define MAX_NUM_PF 4    // max number per frame
 
 using namespace std;
 
@@ -43,7 +45,7 @@ namespace cm{
                            std::vector<cv::Rect> &result_box) -> bool;
             auto classification(cv::Mat inputImg,
                                 std::vector<cv::Rect> result_box,
-                                std::array<int, 4> &result) -> void;
+                                std::array<int, MAX_NUM_PF> &result) -> void;
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName) -> void;
 
