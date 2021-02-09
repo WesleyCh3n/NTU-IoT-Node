@@ -42,7 +42,8 @@ namespace cm{
             auto detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool;
             auto classification(cv::Mat inputImg,
-                                std::vector<cv::Rect> result_box) -> bool;
+                                std::vector<cv::Rect> result_box,
+                                std::array<int, 4> &result) -> void;
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName) -> void;
 

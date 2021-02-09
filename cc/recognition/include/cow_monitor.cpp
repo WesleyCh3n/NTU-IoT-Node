@@ -22,6 +22,8 @@
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
 
+#define CLASS_NUM 19
+
 using namespace std;
 using namespace cm;
 
@@ -190,35 +192,31 @@ auto CowMonitor::detection(cv::Mat inputImg,
 }
 
 auto CowMonitor::classification(cv::Mat inputImg,
-                                std::vector<cv::Rect> result_box) -> bool{
+                                std::vector<cv::Rect> detect_box,
+                                std::array<int, 4> &result) -> void{
     /* TODO: Use stack method with fix output size(128) & result(6)
      * std::array<std::array<float, 128>, 6> results; */
-    Timer timer;
     std::vector< std::vector<float> > vecs;
-    for(cv::Rect roi: result_box){
+    for(cv::Rect roi: detect_box){
         cv::Mat cropImg = inputImg(roi);
-        // cv::imwrite(boost::str(boost::format("%02d.jpg")%i), cropImg);
-        // i++;
         cropImg = matPreprocess(cropImg,
-                                 c_input_dim_.width, c_input_dim_.height,
-                                 cm::model::mobilenetv2::norm);
+                                c_input_dim_.width, c_input_dim_.height,
+                                cm::model::mobilenetv2::norm);
         memcpy(c_input_tensor_->data.f, cropImg.ptr<float>(0),
                c_input_dim_.height * c_input_dim_.height *
                c_input_dim_.channel * sizeof(float));
         c_interpreter_->Invoke();
+
         vecs.emplace_back(cm::model::cvtTensor(c_output_tensor_));
+
     }
     for(int i=0; i<vecs.size(); i++){
-        std::array<float, 19> tmp;
+        std::array<float, CLASS_NUM> tmp;
         for(int k=0; k<refs_.size(); k++){
-            // tmp.emplace_back(boost::math::tools::l2_distance(vecs[i],refs_[k]));
             tmp[k] = boost::math::tools::l2_distance(vecs[i],refs_[k]);
         }
-        std::cout << std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
-        std::cout << " ";
+        result[i] = std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
     }
-    std::cout << "\n";
-    return true;
 }
 
 auto CowMonitor::Stream(int width, int height) -> bool{
@@ -295,7 +293,8 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
     vector<cv::Rect> result_box;
     // int i = 0;
     if(detection(img, result_box)){
-        classification(img, result_box);
+        std::array<int,4> result_ids = { -1,-1,-1,-1 };
+        classification(img, result_box, result_ids);
     }
 }
 
