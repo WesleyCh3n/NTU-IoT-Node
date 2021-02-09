@@ -196,26 +196,30 @@ auto CowMonitor::classification(cv::Mat inputImg,
                                 std::array<int, 4> &result) -> void{
     /* TODO: Use stack method with fix output size(128) & result(6)
      * std::array<std::array<float, 128>, 6> results; */
-    std::vector< std::vector<float> > vecs;
+#ifdef BENCHMARK
+    Timer timer;
+#endif
+    int i=0;
     for(cv::Rect roi: detect_box){
         cv::Mat cropImg = inputImg(roi);
         cropImg = matPreprocess(cropImg,
-                                c_input_dim_.width, c_input_dim_.height,
-                                cm::model::mobilenetv2::norm);
+                c_input_dim_.width, c_input_dim_.height,
+                cm::model::mobilenetv2::norm);
         memcpy(c_input_tensor_->data.f, cropImg.ptr<float>(0),
-               c_input_dim_.height * c_input_dim_.height *
-               c_input_dim_.channel * sizeof(float));
-        c_interpreter_->Invoke();
-
-        vecs.emplace_back(cm::model::cvtTensor(c_output_tensor_));
-
-    }
-    for(int i=0; i<vecs.size(); i++){
+                c_input_dim_.height * c_input_dim_.height *
+                c_input_dim_.channel * sizeof(float));
+        {
+#ifdef BENCHMARK
+            Timer timer;
+#endif
+            c_interpreter_->Invoke();
+        }
         std::array<float, CLASS_NUM> tmp;
         for(int k=0; k<refs_.size(); k++){
-            tmp[k] = boost::math::tools::l2_distance(vecs[i],refs_[k]);
+            tmp[k] = boost::math::tools::l2_distance(cm::model::cvtTensor(c_output_tensor_),refs_[k]);
         }
         result[i] = std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
+        i++;
     }
 }
 
