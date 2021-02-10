@@ -1,12 +1,12 @@
 # NTU-IOT-NODE
 
-This is my NTU MS thesis project. The purpose of this project is using edge
- device (Rpi) to monitoring dairy cow feeding behaviour. The code is focus on
- streaming also recognizing individual cow faces by edge computing (with
- Tensorflow Lite etc).
+This is NTU BME MS thesis project. The purpose of this project is using edge
+device (Rpi) to monitoring dairy cow feeding behaviour. The code is focus on
+streaming also recognizing individual cow faces by edge computing (with
+Tensorflow Lite etc).
 
-This repo contains c++ and python version. The python version is deprecated, but still
-usable. The main program uses c++ which is in 
+This repo contains c++ and python version. *The python version is deprecated, but still
+usable*. The main program uses c++ which is in
 [cc/recognition](https://github.com/WesleyCh3n/ntu-iot-node/tree/main/cc/recognition)
  folder.
 
@@ -34,14 +34,14 @@ Usage:
 
 ### Platform
 
-- os:Raspbian GNU/Linux 10 (buster)
-- kernel:5.4.51-v7l+
+- os: Raspbian GNU/Linux 10 (buster)
+- kernel: 5.4.51-v7l+
 
 ### Prerequisites
 
 All libraries are built in static and default location is in `/opt/`. Or, modify
 [Makefile](https://github.com/WesleyCh3n/ntu-iot-node/blob/main/cc/recognition/Makefile)
- to the correct folder.
+ to the correct folder you built.
 
 - [OpenCV](https://github.com/opencv/opencv): 4.5.1
 - [Tensorflow Lite](https://www.tensorflow.org/lite/guide/build_rpi)
@@ -51,4 +51,4 @@ All libraries are built in static and default location is in `/opt/`. Or, modify
 
 **Pre-built Library**: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
 
-goto `/opt/` and extract all then good to go.
+go to `/opt/` and extract all then good to go.
