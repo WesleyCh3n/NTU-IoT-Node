@@ -52,3 +52,21 @@ All libraries are built in static and default location is in `/opt/`. Or, modify
 **Pre-built Library**: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
 
 go to `/opt/` and extract all then good to go.
+
+### Compiling
+
+Clone the project to the Raspberry Pi. And cd to cc/recognition/ then compile.
+Make sure your prerequisites are built.
+```bash
+git clone https://github.com/WesleyCh3n/ntu-iot-node
+cd cc/recognition/
+make clean; make RELEASE=1
+```
+you will see something like
+```bash
+rm -f ntu-iot-node include/cow_monitor.o main.o
+Compiling cow_monitor.o
+Compiling ntu-iot-node
+Compiling Complete
+```
+then can type `./ntu-iot-node -h` to see the usage.
