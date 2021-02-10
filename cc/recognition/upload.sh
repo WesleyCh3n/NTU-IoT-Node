@@ -41,7 +41,7 @@ while (( "$#" )); do
 done
 eval set -- "$PARAMS"
 
-mkdir -p /home/data/
+mkdir -p /home/data/img/
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 # grep which node this is
 RESULT=$(echo $DIR |grep -o "NODE[0-9][0-9]")
