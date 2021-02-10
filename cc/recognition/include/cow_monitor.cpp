@@ -198,8 +198,14 @@ auto CowMonitor::classification(cv::Mat inputImg,
     Timer timer;
 #endif
     int i=0;
+    cv::Rect roiImg(0, 0, vW_, vH_);
     for(cv::Rect roi: detect_box){
-        cv::Mat cropImg = inputImg(roi);
+        cv::Mat cropImg = inputImg(roi & roiImg);
+        // if((roi.area() > 0) && ((roiImg & roi).area() == roi.area()))
+        //     cv::Mat cropImg = inputImg(roi);
+        // else{
+        //
+        // }
         cropImg = matPreprocess(cropImg,
                 c_input_dim_.width, c_input_dim_.height,
                 cm::model::mobilenetv2::norm);
@@ -230,6 +236,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
     Camera.set(cv::CAP_PROP_FRAME_WIDTH, width);
     Camera.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     vW_ = width; vH_ = height;
+    cv::Rect nValue(-1,-1,-1,-1);
     cout << "Opening Camera...\n";
     if(!Camera.open()){
         cerr << "Error opening the camera\n";
@@ -250,23 +257,35 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         std::string img_dir = "/home/data/img/"+YMD+"/";
 #ifdef RELEASE
         std::filesystem::create_directories(img_dir);
-        std::ofstream csvFile("/home/data/"+YMD+"-detect.csv", std::ios::app);
+        std::ofstream csvFile("/home/data/"+YMD+".csv", std::ios::app);
         if(!csvFile.is_open()) cerr << "open csv failed\n";
 #endif
-
         printf("\r%s-%s", YMD.c_str(), HMS.c_str());
         fflush(stdout);
         Camera.grab();
         Camera.retrieve(frame);
         vector<cv::Rect> result_box;
         if(detection(frame, result_box)){
-            printf("\tThere are %d\n", result_box.size());
+            std::array<int,MAX_NUM_PF> result_ids;
+            result_ids.fill(-1);
+            classification(frame, result_box, result_ids);
+            printf("\t%d %d %d %d %d \n", result_box.size(),
+                   result_ids[0], result_ids[1], result_ids[2], result_ids[3]);
             fflush(stdout);
 #ifdef RELEASE
+            /* DATE,NUM,id,id,id,id,box,box,box,box */
             std::filesystem::current_path(img_dir);
             cv::imwrite(YMD+"-"+HMS+".jpg", frame);
-            csvFile << YMD+"-"+HMS << ","
-                    << std::to_string(result_box.size()) << '\n';
+            csvFile << YMD+"-"+HMS << "," << result_box.size() << ",";
+            std::fill_n(std::back_inserter(result_box),
+                        MAX_NUM_PF-result_box.size(), nValue);
+            for(int &id:result_ids) csvFile << id << ",";
+            std::for_each(result_box.begin(), result_box.end(),
+                    [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
+                                                << tmp.y << ";"
+                                                << tmp.width << ";"
+                                                << tmp.height << ","; });
+            csvFile << "\n";
             csvFile.flush();
 #endif
         }
@@ -274,29 +293,23 @@ auto CowMonitor::Stream(int width, int height) -> bool{
 #ifdef RELEASE
             std::filesystem::current_path("/home/data/");
 #endif
-            printf("\tNothing");
+            printf("\t%d %d %d %d %d", 0, -1, -1, -1, -1);
             fflush(stdout);
         }
-
-        // end = std::chrono::system_clock::now();
-        // elapsed_seconds = end - start;
-        // printf("\rs: %.5f", elapsed_seconds.count());
     }
     Camera.release();
     // cv::flip(frame, frame, -1);
-    // cv::imwrite("raspicam_cv_image.jpg", frame);
     return true;
 }
 
 auto CowMonitor::RunImage(std::string fileName) -> void{
     cv::Mat img = cv::imread(fileName);
-    vW_ = img.cols;
-    vH_ = img.rows;
+    vW_ = img.cols; vH_ = img.rows;
     cv::Rect nValue(-1,-1,-1,-1);
     vector<cv::Rect> result_box;
     if(detection(img, result_box)){
         for(cv::Rect box:result_box)
-            cv::rectangle(img, tmp, cv::Scalar(0, 255, 0), 3);
+            cv::rectangle(img, box, cv::Scalar(0, 255, 0), 3);
         cv::imwrite("./result.jpg", img);
         std::array<int,MAX_NUM_PF> result_ids;
         std::fill_n(result_ids.begin(), MAX_NUM_PF, -1);
