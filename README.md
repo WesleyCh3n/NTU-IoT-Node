@@ -29,3 +29,26 @@ Usage:
   -h, --help          Print usage
 
 ```
+
+## Build
+
+### Platform
+
+- os:Raspbian GNU/Linux 10 (buster)
+- kernel:5.4.51-v7l+
+
+### Prerequisites
+
+All libraries are built in static and default location is in `/opt/`. Or, modify
+[Makefile](https://github.com/WesleyCh3n/ntu-iot-node/blob/main/cc/recognition/Makefile)
+ to the correct folder.
+
+- [OpenCV](https://github.com/opencv/opencv): 4.5.1
+- [Tensorflow Lite](https://www.tensorflow.org/lite/guide/build_rpi)
+- [RaspiCam](https://github.com/cedricve/raspicam)
+- [Boost](https://www.boost.org/): 1.75.0
+- [CXXopts](https://github.com/jarro2783/cxxopts): 2.2.1
+
+~~Pre-built Library~~: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
+
+goto `/opt/` and extract all then good to go.
