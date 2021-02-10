@@ -26,9 +26,7 @@ namespace cm{
 
     class CowMonitor{
         struct InputDim{
-            uint height;
-            uint width;
-            uint channel;
+            uint h, w, c;
         };
         public:
             CowMonitor(){};

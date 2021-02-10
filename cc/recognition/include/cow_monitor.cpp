@@ -89,11 +89,11 @@ bool CowMonitor::initdModel(std::string model_path){
     d_output_box_ = d_interpreter_->tensor(d_interpreter_->outputs()[0]);
     d_output_score_ = d_interpreter_->tensor(d_interpreter_->outputs()[1]);
 
-    d_input_dim_.height = d_input_tensor_->dims->data[1];
-    d_input_dim_.width = d_input_tensor_->dims->data[2];
-    d_input_dim_.channel = d_input_tensor_->dims->data[3];
+    d_input_dim_.h = d_input_tensor_->dims->data[1];
+    d_input_dim_.w = d_input_tensor_->dims->data[2];
+    d_input_dim_.c = d_input_tensor_->dims->data[3];
     printf("Input size: %d %d %d\n",
-           d_input_dim_.height, d_input_dim_.width, d_input_dim_.channel);
+           d_input_dim_.h, d_input_dim_.w, d_input_dim_.c);
     return true;
 }
 
@@ -107,11 +107,11 @@ bool CowMonitor::initcModel(std::string model_path){
     c_input_tensor_ = c_interpreter_->tensor(c_interpreter_->inputs()[0]);
     c_output_tensor_ = c_interpreter_->tensor(c_interpreter_->outputs()[0]);
 
-    c_input_dim_.height = c_input_tensor_->dims->data[1];
-    c_input_dim_.width = c_input_tensor_->dims->data[2];
-    c_input_dim_.channel = c_input_tensor_->dims->data[3];
+    c_input_dim_.h = c_input_tensor_->dims->data[1];
+    c_input_dim_.w = c_input_tensor_->dims->data[2];
+    c_input_dim_.c = c_input_tensor_->dims->data[3];
     printf("Input size: %d %d %d\n",
-           c_input_dim_.height, c_input_dim_.width, c_input_dim_.channel);
+           c_input_dim_.h, c_input_dim_.w, c_input_dim_.c);
     return true;
 }
 
@@ -155,10 +155,10 @@ auto CowMonitor::yoloResult(vector<float> &box,
         const int cy   = box[4*id+1];
         const int w    = box[4*id+2];
         const int h    = box[4*id+3];
-        const int xmin = ((cx-(w/2.f))/d_input_dim_.width) * vW_;
-        const int ymin = ((cy-(h/2.f))/d_input_dim_.height) * vH_;
-        const int xmax = ((cx+(w/2.f))/d_input_dim_.width) * vW_;
-        const int ymax = ((cy+(h/2.f))/d_input_dim_.height) * vH_;
+        const int xmin = ((cx-(w/2.f))/d_input_dim_.w) * vW_;
+        const int ymin = ((cy-(h/2.f))/d_input_dim_.h) * vH_;
+        const int xmax = ((cx+(w/2.f))/d_input_dim_.w) * vW_;
+        const int ymax = ((cy+(h/2.f))/d_input_dim_.h) * vH_;
         rects.emplace_back(cv::Rect(xmin, ymin, xmax-xmin, ymax-ymin) & roiImg);
         scores.emplace_back(score[id]);
         it = std::find_if(std::next(it), std::end(score),
@@ -178,11 +178,11 @@ auto CowMonitor::yoloResult(vector<float> &box,
 
 auto CowMonitor::detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool{
-    inputImg = matPreprocess(inputImg, d_input_dim_.width, d_input_dim_.height,
+    inputImg = matPreprocess(inputImg, d_input_dim_.w, d_input_dim_.h,
                              cm::model::yolov4::norm);
     memcpy(d_input_tensor_->data.f, inputImg.ptr<float>(0),
-           d_input_dim_.height * d_input_dim_.height *
-           d_input_dim_.channel * sizeof(float));
+           d_input_dim_.h * d_input_dim_.h *
+           d_input_dim_.c * sizeof(float));
     d_interpreter_->Invoke();
     vector<float> box_vec   = cm::model::cvtTensor(d_output_box_);
     vector<float> score_vec = cm::model::cvtTensor(d_output_score_);
@@ -200,13 +200,14 @@ auto CowMonitor::classification(cv::Mat inputImg,
 #endif
     int i=0;
     for(cv::Rect roi: detect_box){
+        if(i > MAX_NUM_PF-1) continue;
         cv::Mat cropImg = inputImg(roi);
         cropImg = matPreprocess(cropImg,
-                c_input_dim_.width, c_input_dim_.height,
+                c_input_dim_.w, c_input_dim_.h,
                 cm::model::mobilenetv2::norm);
         memcpy(c_input_tensor_->data.f, cropImg.ptr<float>(0),
-                c_input_dim_.height * c_input_dim_.height *
-                c_input_dim_.channel * sizeof(float));
+                c_input_dim_.h * c_input_dim_.h *
+                c_input_dim_.c * sizeof(float));
         {
 #ifdef BENCHMARK
             Timer timer;
@@ -214,17 +215,14 @@ auto CowMonitor::classification(cv::Mat inputImg,
             c_interpreter_->Invoke();
         }
         std::array<float, CLASS_NUM> tmp;
-        for(int k=0; k<refs_.size(); k++){
+        for(int k=0; k<refs_.size(); k++)
             tmp[k] = boost::math::tools::l2_distance(cm::model::cvtTensor(c_output_tensor_),refs_[k]);
-        }
         result[i] = std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
         i++;
     }
 }
 
 auto CowMonitor::Stream(int width, int height) -> bool{
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    std::chrono::duration<double> elapsed_seconds;
     raspicam::RaspiCam_Cv Camera;
     cv::Mat frame;
     Camera.set(cv::CAP_PROP_FORMAT, CV_8UC3);

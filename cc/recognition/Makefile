@@ -6,7 +6,7 @@ ifeq ($(RELEASE),1)
 endif
 
 SRC := main.cc
-PROG := main
+PROG := ntu-iot-node
 
 COWMONITOR_SRC := include/cow_monitor.cpp
 COWMONITOR_OBJ := cow_monitor.o
@@ -16,6 +16,7 @@ OPENCV_DIR := /opt/opencv
 RASPICAM_DIR := /opt/raspicam
 VC_DIR := /opt/vc
 BOOST_DIR := /opt/boost_1_75_0
+CXXOPT_DIR := /opt/cxxopts-2.2.1
 
 INCLUDES := \
 -I$(TF_DIR)/tensorflow/lite/tools/make/downloads/flatbuffers/include \
@@ -23,6 +24,7 @@ INCLUDES := \
 -I$(OPENCV_DIR)/include/opencv4 \
 -I$(RASPICAM_DIR)/include \
 -I$(BOOST_DIR) \
+-I$(CXXOPT_DIR)/include \
 -I/home/pi/ntu-iot-node/cc/recognition
 
 LIBDIRS := \
