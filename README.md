@@ -49,6 +49,6 @@ All libraries are built in static and default location is in `/opt/`. Or, modify
 - [Boost](https://www.boost.org/): 1.75.0
 - [CXXopts](https://github.com/jarro2783/cxxopts): 2.2.1
 
-~~Pre-built Library~~: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
+**Pre-built Library**: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
 
 goto `/opt/` and extract all then good to go.
