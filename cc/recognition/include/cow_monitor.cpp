@@ -148,6 +148,7 @@ auto CowMonitor::yoloResult(vector<float> &box,
                            [&thres](float i){return i > thres;});
     vector<cv::Rect> rects;
     vector<float> scores;
+    cv::Rect roiImg(0, 0, vW_, vH_);
     while (it != std::end(score)) {
         size_t id      = std::distance(std::begin(score), it);
         const int cx   = box[4*id];
@@ -158,7 +159,7 @@ auto CowMonitor::yoloResult(vector<float> &box,
         const int ymin = ((cy-(h/2.f))/d_input_dim_.height) * vH_;
         const int xmax = ((cx+(w/2.f))/d_input_dim_.width) * vW_;
         const int ymax = ((cy+(h/2.f))/d_input_dim_.height) * vH_;
-        rects.emplace_back(cv::Rect(xmin, ymin, xmax-xmin, ymax-ymin));
+        rects.emplace_back(cv::Rect(xmin, ymin, xmax-xmin, ymax-ymin) & roiImg);
         scores.emplace_back(score[id]);
         it = std::find_if(std::next(it), std::end(score),
                           [&thres](float i){return i > thres;});
@@ -198,14 +199,8 @@ auto CowMonitor::classification(cv::Mat inputImg,
     Timer timer;
 #endif
     int i=0;
-    cv::Rect roiImg(0, 0, vW_, vH_);
     for(cv::Rect roi: detect_box){
-        cv::Mat cropImg = inputImg(roi & roiImg);
-        // if((roi.area() > 0) && ((roiImg & roi).area() == roi.area()))
-        //     cv::Mat cropImg = inputImg(roi);
-        // else{
-        //
-        // }
+        cv::Mat cropImg = inputImg(roi);
         cropImg = matPreprocess(cropImg,
                 c_input_dim_.width, c_input_dim_.height,
                 cm::model::mobilenetv2::norm);
