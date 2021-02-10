@@ -236,7 +236,6 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         return -1;
     }
     for(;;){
-        // start = std::chrono::system_clock::now();
         time_t now = time(0);
         tm *ltm = localtime(&now);
         std::string YMD = boost::str(boost::format("%04d_%02d_%02d")%
