@@ -200,7 +200,7 @@ auto CowMonitor::classification(cv::Mat inputImg,
 #endif
     int i=0;
     for(cv::Rect roi: detect_box){
-        if(i > MAX_NUM_PF-1) continue;
+        if(i > MAX_NUM_PF-1) break;
         cv::Mat cropImg = inputImg(roi);
         cropImg = matPreprocess(cropImg,
                 c_input_dim_.w, c_input_dim_.h,
@@ -256,6 +256,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         fflush(stdout);
         Camera.grab();
         Camera.retrieve(frame);
+        cv::flip(frame, frame, -1);
         vector<cv::Rect> result_box;
         if(detection(frame, result_box)){
             std::array<int,MAX_NUM_PF> result_ids;
@@ -290,7 +291,6 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         }
     }
     Camera.release();
-    // cv::flip(frame, frame, -1);
     return true;
 }
 
