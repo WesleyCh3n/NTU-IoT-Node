@@ -1,8 +1,8 @@
 CC := arm-linux-gnueabihf-g++
 CCFLAGS := -Bstatic -std=c++17 -O3
 
-SRC := cam.cc
-PROG := cam
+SRC := cvCam.cc
+PROG := cvCam
 
 OPENCV_DIR := /opt/opencv
 RASPICAM_DIR := /opt/raspicam
@@ -11,6 +11,7 @@ VC_DIR := /opt/vc
 INCLUDES := \
 -I$(OPENCV_DIR)/include/opencv4 \
 -I$(RASPICAM_DIR)/include \
+-I/usr/include/arm-linux-gnueabihf
 
 LIBDIRS := \
 -L$(OPENCV_DIR)/lib/ \
@@ -36,7 +37,8 @@ LIBS := \
 -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo \
 -lopencv_imgproc -lopencv_core -littnotify -llibprotobuf -llibwebp \
 -llibopenjp2 -lIlmImf -lquirc -ltegra_hal -lade -ljpeg -lpng -ltiff \
--lz -ldl -lm -lpthread -lrt \
+-lavcodec -lswscale -lavutil -ldc1394\
+-lz -ldl -lm -lpthread -lrt -lavformat \
 -lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util
 
 

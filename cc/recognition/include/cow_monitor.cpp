@@ -270,8 +270,9 @@ auto CowMonitor::Stream(int width, int height) -> bool{
             std::filesystem::current_path(img_dir);
             cv::imwrite(YMD+"-"+HMS+".jpg", frame);
             csvFile << YMD+"-"+HMS << "," << result_box.size() << ",";
-            std::fill_n(std::back_inserter(result_box),
-                        MAX_NUM_PF-result_box.size(), nValue);
+            if(result_box.size() < MAX_NUM_PF + 1)
+                std::fill_n(std::back_inserter(result_box),
+                            MAX_NUM_PF-result_box.size(), nValue);
             for(int &id:result_ids) csvFile << id << ",";
             std::for_each(result_box.begin(), result_box.end(),
                     [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
