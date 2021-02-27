@@ -21,6 +21,7 @@
 #include "boost/math/tools/norms.hpp"
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
+#include "mqtt/client.h"
 
 
 using namespace std;
@@ -221,6 +222,25 @@ auto CowMonitor::classification(cv::Mat inputImg,
         i++;
     }
 }
+auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
+                          std::array<int, MAX_NUM_PF> &result_ids) -> bool{
+    cv::Rect nBox(-1,-1,-1,-1);
+    std::stringstream msg;
+    int total = result_box.size();
+    if(total < MAX_NUM_PF + 1)
+        std::fill_n(std::back_inserter(result_box), MAX_NUM_PF-total, nBox);
+    msg << "NTU_FEED,node=01 total=" << total << ",";
+    for(size_t i=0; i<MAX_NUM_PF; i++){
+        msg << "id" << i << "=" << result_ids[i] << ","
+            << "box" << i << "=" << "\"" << result_box[i].x << ","
+            << result_box[i].y << "," << result_box[i].width << ","
+            << result_box[i].height << "\"";
+        if(i != MAX_NUM_PF-1) msg << ",";
+    }
+    msg << " " << now << "000000000";
+    std::cout << msg.str() << endl;
+    return true;
+}
 
 auto CowMonitor::Stream(int width, int height) -> bool{
     raspicam::RaspiCam_Cv Camera;
@@ -229,7 +249,6 @@ auto CowMonitor::Stream(int width, int height) -> bool{
     Camera.set(cv::CAP_PROP_FRAME_WIDTH, width);
     Camera.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     vW_ = width; vH_ = height;
-    cv::Rect nValue(-1,-1,-1,-1);
     cout << "Opening Camera...\n";
     if(!Camera.open()){
         cerr << "Error opening the camera\n";
@@ -262,25 +281,10 @@ auto CowMonitor::Stream(int width, int height) -> bool{
             fflush(stdout);
             std::filesystem::current_path(img_dir);
             cv::imwrite(YMD+"-"+HMS+".jpg", frame);
-            /* DATE,NUM,id,id,id,id,box,box,box,box */
             /*
              * TODO: mqtt publish
              *  */
-            std::stringstream msg;
-            int total = result_box.size();
-            if(result_box.size() < MAX_NUM_PF + 1)
-                std::fill_n(std::back_inserter(result_box),
-                            MAX_NUM_PF-result_box.size(), nValue);
-            msg << "NTU_FEED,node=01 total=" << total << ",";
-            for(size_t i=0; i<MAX_NUM_PF; i++){
-                msg << "id" << i << "=" << result_ids[i] << ","
-                    << "box" << i << "=" << "\"" << result_box[i].x << ","
-                    << result_box[i].y << "," << result_box[i].width << ","
-                    << result_box[i].height << "\"";
-                if(i != MAX_NUM_PF-1) msg << ",";
-            }
-            msg << " " << now << "000000000";
-            std::cout << msg.str() << endl;
+            mqtt_pub(now, result_box, result_ids);
 #ifdef CSV_RELEASE
             csvFile << YMD+"-"+HMS << "," << result_box.size() << ",";
             if(result_box.size() < MAX_NUM_PF + 1)

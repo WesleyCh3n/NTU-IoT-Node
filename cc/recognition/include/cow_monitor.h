@@ -44,6 +44,8 @@ namespace cm{
             auto classification(cv::Mat inputImg,
                                 std::vector<cv::Rect> result_box,
                                 std::array<int, MAX_NUM_PF> &result) -> void;
+            auto mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
+                          std::array<int, MAX_NUM_PF> &result) -> bool;
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName) -> void;
 
