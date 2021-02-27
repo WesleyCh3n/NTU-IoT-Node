@@ -236,19 +236,14 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         return -1;
     }
     for(;;){
-        time_t now = time(0);
-        tm *ltm = localtime(&now);
-        std::string YMD = boost::str(boost::format("%04d_%02d_%02d")%
-                                     (1900+ltm->tm_year)%
-                                     (1+ltm->tm_mon)%
-                                     (ltm->tm_mday));
-        std::string HMS = boost::str(boost::format("%02d_%02d_%02d")%
-                                     (ltm->tm_hour)%
-                                     (ltm->tm_min)%
-                                     (ltm->tm_sec));
+        std::time_t now = std::time(nullptr);
+        char ymd[12], hms[12];
+        strftime(ymd, sizeof(ymd), "%Y_%m_%d", std::localtime(&now));
+        strftime(hms, sizeof(hms), "%H_%M_%S", std::localtime(&now));
+        std::string YMD(ymd), HMS(hms);
         std::string img_dir = "/home/data/img/"+YMD+"/";
-#ifdef RELEASE
         std::filesystem::create_directories(img_dir);
+#ifdef CSV_RELEASE
         std::ofstream csvFile("/home/data/"+YMD+".csv", std::ios::app);
         if(!csvFile.is_open()) cerr << "open csv failed\n";
 #endif
@@ -265,14 +260,33 @@ auto CowMonitor::Stream(int width, int height) -> bool{
             printf("\t%d %d %d %d %d \n", result_box.size(),
                    result_ids[0], result_ids[1], result_ids[2], result_ids[3]);
             fflush(stdout);
-#ifdef RELEASE
-            /* DATE,NUM,id,id,id,id,box,box,box,box */
             std::filesystem::current_path(img_dir);
             cv::imwrite(YMD+"-"+HMS+".jpg", frame);
+            /* DATE,NUM,id,id,id,id,box,box,box,box */
+            /*
+             * TODO: mqtt publish
+             *  */
+            std::stringstream msg;
+            int total = result_box.size();
+            if(result_box.size() < MAX_NUM_PF + 1)
+                std::fill_n(std::back_inserter(result_box),
+                            MAX_NUM_PF-result_box.size(), nValue);
+            msg << "NTU_FEED,node=01 total=" << total << ",";
+            for(size_t i=0; i<MAX_NUM_PF; i++){
+                msg << "id" << i << "=" << result_ids[i] << ","
+                    << "box" << i << "=" << "\"" << result_box[i].x << ","
+                    << result_box[i].y << "," << result_box[i].width << ","
+                    << result_box[i].height << "\"";
+                if(i != MAX_NUM_PF-1) msg << ",";
+            }
+            msg << " " << now << "000000000";
+            std::cout << msg.str() << endl;
+#ifdef CSV_RELEASE
             csvFile << YMD+"-"+HMS << "," << result_box.size() << ",";
             if(result_box.size() < MAX_NUM_PF + 1)
                 std::fill_n(std::back_inserter(result_box),
                             MAX_NUM_PF-result_box.size(), nValue);
+
             for(int &id:result_ids) csvFile << id << ",";
             std::for_each(result_box.begin(), result_box.end(),
                     [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
