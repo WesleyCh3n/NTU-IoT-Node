@@ -5,11 +5,11 @@ ifeq ($(RELEASE),1)
 	CCFLAGS += -DRELEASE
 endif
 
-SRC := main.cc
-PROG := ntu-iot-node
+SRC := main.cc include/cow_monitor.cpp
+TARGET := ntu-iot-node
 
-COWMONITOR_SRC := include/cow_monitor.cpp
-COWMONITOR_OBJ := cow_monitor.o
+# COWMONITOR_SRC :=
+OBJFILES := cow_monitor.o main.o
 
 TF_DIR := /opt/tensorflow_src
 OPENCV_DIR := /opt/opencv
@@ -17,6 +17,8 @@ RASPICAM_DIR := /opt/raspicam
 VC_DIR := /opt/vc
 BOOST_DIR := /opt/boost_1_75_0
 CXXOPT_DIR := /opt/cxxopts-2.2.1
+MQTTC_DIR := /opt/paho.mqtt.c
+MQTTCXX_DIR := /opt/paho.mqtt.cpp
 
 INCLUDES := \
 -I$(TF_DIR)/tensorflow/lite/tools/make/downloads/flatbuffers/include \
@@ -25,6 +27,8 @@ INCLUDES := \
 -I$(RASPICAM_DIR)/include \
 -I$(BOOST_DIR) \
 -I$(CXXOPT_DIR)/include \
+-I$(MQTTC_DIR)/build/install/include \
+-I$(MQTTCXX_DIR)/build/install/include \
 -I/home/pi/ntu-iot-node/cc/recognition
 
 LIBDIRS := \
@@ -33,7 +37,9 @@ LIBDIRS := \
 -L$(OPENCV_DIR)/lib/opencv4/3rdparty \
 -L$(OPENCV_DIR)/build/lib \
 -L$(RASPICAM_DIR)/lib \
--L$(VC_DIR)/lib/ \
+-L$(MQTTC_DIR)/build/install/lib \
+-L$(MQTTCXX_DIR)/build/install/lib \
+-L$(VC_DIR)/lib/
 
 LIBS := \
 -lstdc++fs \
@@ -53,21 +59,22 @@ LIBS := \
 -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo \
 -lopencv_imgproc -lopencv_core -littnotify -llibprotobuf -llibwebp \
 -llibopenjp2 -lIlmImf -lquirc -ltegra_hal -lade -ljpeg -lpng -ltiff \
--lz -ldl -lm -lpthread -lrt \
--lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util
+-lpaho-mqtt3as -lpaho-mqttpp3 \
+-lz -lm -lpthread -ldl -lrt \
+-lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util \
+-Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic
 
+all:$(TARGET)
 
-$(PROG):$(SRC) $(COWMONITOR_OBJ)
-	@echo "Compiling $(PROG)"
-	@$(CC) $(CCFLAGS) -o $(PROG) include/cow_monitor.o $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
-	@rm main.o
+$(TARGET):$(OBJFILES)
+	@echo "Compiling $(TARGET)"
+	@$(CC) $(CCFLAGS) -o $(TARGET) $(OBJFILES) $(INCLUDES) $(LIBDIRS) $(LIBS)
 	@echo "Compiling Complete"
 
-$(COWMONITOR_OBJ):$(COWMONITOR_SRC)
-	@echo "Compiling $(COWMONITOR_OBJ)"
-	@$(CC) $(CCFLAGS) -c $(COWMONITOR_SRC) $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
-	@mv cow_monitor.o include/cow_monitor.o
+$(OBJFILES):$(COWMONITOR_SRC)
+	@echo "Compiling $(OBJFILES)"
+	@$(CC) $(CCFLAGS) -c $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
 
 .PHONY: clean
 clean:
-	rm -f $(PROG) include/cow_monitor.o main.o
+	rm -f $(TARGET) cow_monitor.o main.o
