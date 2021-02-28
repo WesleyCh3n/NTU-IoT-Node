@@ -52,12 +52,14 @@ class Timer{
 
 /*=================== CowMonitor Class definition ===================*/
 
-bool CowMonitor::Init(std::string model_path[], std::string ref, int MODE){
-    cout << "MODE: " << MODE << '\n';
-    if(!ref.empty()){
-        refs_ = cm::model::readTSV(ref);
-    }
-    switch(MODE){
+bool CowMonitor::Init(std::string node, std::string model_path[], std::string ref, int mode){
+    node_ = node;
+    cout << "Node: " << node_ << '\n';
+    cout << "Mode: " << mode << '\n';
+    cout << "Mqtt: " << ip_ << '\n';
+    cout << "Mqtt user: " << user_ << '\n';
+    if(!ref.empty()) refs_ = cm::model::readTSV(ref);
+    switch(mode){
         case cm::DETECT:{
             bool d_status = initdModel(model_path[0]);
             return d_status;
@@ -78,6 +80,20 @@ bool CowMonitor::Init(std::string model_path[], std::string ref, int MODE){
     return false;
 }
 
+
+void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
+    ip_ = "tcp://" + ip;
+    user_ = user;
+    pwd_ = pwd;
+    /* TODO: use this wierd ptr & static solve initilize mqtt client */
+    static mqtt::client cli(ip_,user_);
+    cli_ = &cli;
+    connOpts_.set_keep_alive_interval(20);
+    connOpts_.set_clean_session(true);
+    connOpts_.set_user_name(user_);
+    connOpts_.set_password(pwd_);
+
+}
 
 bool CowMonitor::initdModel(std::string model_path){
     printf("Initialize Detection Model: %s\n", model_path.c_str());
@@ -225,21 +241,34 @@ auto CowMonitor::classification(cv::Mat inputImg,
 auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
                           std::array<int, MAX_NUM_PF> &result_ids) -> bool{
     cv::Rect nBox(-1,-1,-1,-1);
-    std::stringstream msg;
+    std::stringstream MSG;
     int total = result_box.size();
     if(total < MAX_NUM_PF + 1)
         std::fill_n(std::back_inserter(result_box), MAX_NUM_PF-total, nBox);
-    msg << "NTU_FEED,node=01 total=" << total << ",";
+    MSG << "NTU_FEED,node=01 total=" << total << ",";
     for(size_t i=0; i<MAX_NUM_PF; i++){
-        msg << "id" << i << "=" << result_ids[i] << ","
+        MSG << "id" << i << "=" << result_ids[i] << ","
             << "box" << i << "=" << "\"" << result_box[i].x << ","
             << result_box[i].y << "," << result_box[i].width << ","
             << result_box[i].height << "\"";
-        if(i != MAX_NUM_PF-1) msg << ",";
+        if(i != MAX_NUM_PF-1) MSG << ",";
     }
-    msg << " " << now << "000000000";
-    std::cout << msg.str() << endl;
-    return true;
+    MSG << " " << now << "000000000";
+    std::cout << MSG.str() << endl;
+    try {
+        // Connect to the client
+        cli_->connect(connOpts_);
+        auto msg = mqtt::make_message("sensors", MSG.str());
+        msg->set_qos(1);
+        cli_->publish(msg);
+        cli_->disconnect();
+        return true;
+    }
+    catch (const mqtt::exception& exc) {
+        std::cerr << "Error: " << exc.what() << " ["
+            << exc.get_reason_code() << "]" << std::endl;
+        return false;
+    }
 }
 
 auto CowMonitor::Stream(int width, int height) -> bool{

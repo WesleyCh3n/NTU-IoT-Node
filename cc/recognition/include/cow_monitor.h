@@ -10,6 +10,7 @@
 #include "tensorflow/lite/model.h"
 
 #include "opencv2/opencv.hpp"
+#include "mqtt/client.h"
 #define CLASS_NUM 19
 #define MAX_NUM_PF 4    // max number per frame
 
@@ -30,9 +31,14 @@ namespace cm{
         };
         public:
             CowMonitor(){};
+            auto Init(std::string node, std::string model_path[],
+                      std::string ref, int mode) -> bool;
+            auto InitMqtt(std::string ip, std::string user, std::string pwd) -> void;
+            auto Stream(int width=1280, int height=960) -> bool;
+            auto RunImage(std::string fileName) -> void;
 
-            auto Init(std::string model_path[], std::string ref,
-                      int MODE) -> bool;
+
+        private:
             auto initdModel(std::string model_path) -> bool;
             auto initcModel(std::string model_path) -> bool;
             auto matPreprocess(cv::Mat &src, uint width, uint height,
@@ -46,10 +52,8 @@ namespace cm{
                                 std::array<int, MAX_NUM_PF> &result) -> void;
             auto mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
                           std::array<int, MAX_NUM_PF> &result) -> bool;
-            auto Stream(int width=1280, int height=960) -> bool;
-            auto RunImage(std::string fileName) -> void;
 
-        private:
+            int vW_, vH_;
             std::vector< std::vector<float> > refs_;
             InputDim d_input_dim_;
             std::unique_ptr<tflite::FlatBufferModel> d_model_;
@@ -62,7 +66,13 @@ namespace cm{
             std::unique_ptr<tflite::Interpreter> c_interpreter_;
             TfLiteTensor* c_input_tensor_  = nullptr;
             TfLiteTensor* c_output_tensor_ = nullptr;
-            int vW_, vH_;
+            /* mqtt variable */
+            mqtt::client *cli_ = nullptr;
+            mqtt::connect_options connOpts_;
+            std::string node_  = "";
+            std::string ip_    = "";
+            std::string user_  = "";
+            std::string pwd_   = "";
     };
 
     namespace model{
