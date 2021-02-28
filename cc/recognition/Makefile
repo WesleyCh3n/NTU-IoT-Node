@@ -59,7 +59,7 @@ LIBS := \
 -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo \
 -lopencv_imgproc -lopencv_core -littnotify -llibprotobuf -llibwebp \
 -llibopenjp2 -lIlmImf -lquirc -ltegra_hal -lade -ljpeg -lpng -ltiff \
--lpaho-mqtt3as -lpaho-mqttpp3 \
+-lpaho-mqttpp3 -lpaho-mqtt3as -lpaho-mqtt3cs \
 -lz -lm -lpthread -ldl -lrt \
 -lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util \
 -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic
