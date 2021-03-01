@@ -1,3 +1,4 @@
 *.o
+core
 data/
 ntu-iot-node*
