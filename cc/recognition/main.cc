@@ -5,6 +5,7 @@
 #include "cxxopts.hpp"
 using namespace std;
 
+
 int main(int argc, char** argv){
     cxxopts::Options options("ntu-iot-node", "Cow face monitoring system");
     options.add_options()
@@ -18,6 +19,7 @@ int main(int argc, char** argv){
         ("q,mqtt", "mqtt address", cxxopts::value<std::string>())
         ("u,user", "mqtt username", cxxopts::value<std::string>())
         ("p,pwd", "mqtt password", cxxopts::value<std::string>())
+        ("v,version", "ntu-iot-node version")
         ("h,help", "Print usage");
     auto result = options.parse(argc, argv);
     if (result.count("help")){
@@ -29,8 +31,11 @@ int main(int argc, char** argv){
         result["detect"].as<std::string>(),
         result["classify"].as<std::string>()
     };
-    // model_path[0] = result["detect"].as<std::string>();
-    // model_path[1] = result["classify"].as<std::string>();
+    if(result.count("version")){
+        const char *VERSION = NTU_IOT_NODE_VERSION;
+        std::cout << "Version " << VERSION << '\n';
+        return 0;
+    }
 
     if(result.count("stream") && result.count("image")){
         std::cout << "Error:\n"
@@ -38,7 +43,6 @@ int main(int argc, char** argv){
         exit(-1);
     }
     if(result.count("stream")){
-        // if(system("CLS")) system("clear");
         std::cout<< u8"\033[2J\033[1;1H";
         cm::CowMonitor cow_monitor;
         if(result.count("mqtt"))
@@ -55,7 +59,7 @@ int main(int argc, char** argv){
         if(!cow_monitor.Stream()) cerr << "Stop!\n";
     }
     if(result.count("image")){
-        if (system("CLS")) system("clear");
+        std::cout<< u8"\033[2J\033[1;1H";
         cm::CowMonitor cow_monitor;
         if(!cow_monitor.Init(result["node"].as<std::string>(),
                              model_path,

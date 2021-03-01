@@ -22,8 +22,6 @@
 #include "opencv2/opencv.hpp"
 #include "raspicam/raspicam_cv.h"
 #include "mqtt/client.h"
-
-
 using namespace std;
 using namespace cm;
 
