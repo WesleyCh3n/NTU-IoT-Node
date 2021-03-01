@@ -25,6 +25,7 @@
 using namespace std;
 using namespace cm;
 
+const char *VERSION = NTU_IOT_NODE_VERSION;
 
 class Timer{
     public:
@@ -52,7 +53,9 @@ class Timer{
 
 bool CowMonitor::Init(std::string node, std::string model_path[], std::string ref, int mode){
     node_ = node;
-    std::cout << std::left << std::setw(16) << "Node" << ": " << node_ << '\n'
+    std::cout << std::left << "====================================\n"
+              << std::setw(16) << "Version" << ": " << VERSION << '\n'
+              << std::setw(16) << "Node" << ": " << node_ << '\n'
               << std::setw(16) << "Mode" << ": " << mode << '\n'
               << std::setw(16) << "Mqtt" << ": " << ip_ << '\n'
               << std::setw(16) << "Mqtt user" << ": " << user_ << '\n';
