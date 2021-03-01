@@ -250,7 +250,7 @@ auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
     int total = result_box.size();
     if(total < MAX_NUM_PF + 1)
         std::fill_n(std::back_inserter(result_box), MAX_NUM_PF-total, nBox);
-    MSG << "NTU_FEED,node=01 total=" << total << ",";
+    MSG << "NTU_FEED,node=" << node_ << " total=" << total << ",";
     for(size_t i=0; i<MAX_NUM_PF; i++){
         MSG << "id" << i << "=" << result_ids[i] << ","
             << "box" << i << "=" << "\"" << result_box[i].x << ","
@@ -320,7 +320,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
             classification(frame, result_box, result_ids);
 
             /* log output */
-            std::cout << '\t' << result_box.size();
+            std::cout << '\t' << result_box.size() << " ";
             for(auto &id:result_ids) std::cout << id << " ";
             std::cout << '\n';
 
