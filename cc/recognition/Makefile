@@ -1,15 +1,12 @@
 CC := arm-linux-gnueabihf-g++
 CCFLAGS := -Bstatic -std=c++17 -O3
-
-ifeq ($(RELEASE),1)
-	CCFLAGS += -DRELEASE
-endif
-
 SRC := main.cc include/cow_monitor.cpp
 TARGET := ntu-iot-node
-
-# COWMONITOR_SRC :=
 OBJFILES := cow_monitor.o main.o
+
+ifeq ($(RELEASE),1)
+	CCFLAGS += -DRELEASE -DNTU_IOT_NODE_VERSION=\"$(VERSION)\"
+endif
 
 TF_DIR := /opt/tensorflow_src
 OPENCV_DIR := /opt/opencv
@@ -64,6 +61,7 @@ LIBS := \
 -lraspicam -lraspicam_cv -lmmal -lmmal_core -lmmal_util \
 -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic
 
+# make clean;make RELEASE=1 VERSION=2.0.1
 all:$(TARGET)
 
 $(TARGET):$(OBJFILES)
@@ -72,6 +70,7 @@ $(TARGET):$(OBJFILES)
 	@echo "Compiling Complete"
 
 $(OBJFILES):$(COWMONITOR_SRC)
+	@echo "Compiling VERSION: $(VERSION)"
 	@echo "Compiling $(OBJFILES)"
 	@$(CC) $(CCFLAGS) -c $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
 
