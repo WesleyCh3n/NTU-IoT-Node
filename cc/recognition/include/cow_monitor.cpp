@@ -54,10 +54,10 @@ class Timer{
 
 bool CowMonitor::Init(std::string node, std::string model_path[], std::string ref, int mode){
     node_ = node;
-    cout << "Node: " << node_ << '\n';
-    cout << "Mode: " << mode << '\n';
-    cout << "Mqtt: " << ip_ << '\n';
-    cout << "Mqtt user: " << user_ << '\n';
+    std::cout << std::left << std::setw(16) << "Node" << ": " << node_ << '\n'
+              << std::setw(16) << "Mode" << ": " << mode << '\n'
+              << std::setw(16) << "Mqtt" << ": " << ip_ << '\n'
+              << std::setw(16) << "Mqtt user" << ": " << user_ << '\n';
     if(!ref.empty()) refs_ = cm::model::readTSV(ref);
     switch(mode){
         case cm::DETECT:{
@@ -96,7 +96,6 @@ void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
 }
 
 bool CowMonitor::initdModel(std::string model_path){
-    printf("Initialize Detection Model: %s\n", model_path.c_str());
     d_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver d_resolver;
     tflite::InterpreterBuilder(*d_model_.get(), d_resolver)(&d_interpreter_);
@@ -109,13 +108,14 @@ bool CowMonitor::initdModel(std::string model_path){
     d_input_dim_.h = d_input_tensor_->dims->data[1];
     d_input_dim_.w = d_input_tensor_->dims->data[2];
     d_input_dim_.c = d_input_tensor_->dims->data[3];
-    printf("Input size: %d %d %d\n",
-           d_input_dim_.h, d_input_dim_.w, d_input_dim_.c);
+    std::cout << std::left
+              << std::setw(16) << "Detect Model" << ": " << model_path << '\n'
+              << std::setw(16) << "Input size" << ": " << d_input_dim_.h << " "
+              << d_input_dim_.w << " " << d_input_dim_.c << '\n';
     return true;
 }
 
 bool CowMonitor::initcModel(std::string model_path){
-    printf("Initialize Classification Model: %s\n", model_path.c_str());
     c_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver c_resolver;
     tflite::InterpreterBuilder(*c_model_.get(), c_resolver)(&c_interpreter_);
@@ -127,8 +127,10 @@ bool CowMonitor::initcModel(std::string model_path){
     c_input_dim_.h = c_input_tensor_->dims->data[1];
     c_input_dim_.w = c_input_tensor_->dims->data[2];
     c_input_dim_.c = c_input_tensor_->dims->data[3];
-    printf("Input size: %d %d %d\n",
-           c_input_dim_.h, c_input_dim_.w, c_input_dim_.c);
+    std::cout << std::left
+              << std::setw(16) << "Classify Model" << ": " << model_path << '\n'
+              << std::setw(16) << "Input size" << ": " << c_input_dim_.h << " "
+              << c_input_dim_.w << " " << c_input_dim_.c << '\n';
     return true;
 }
 
@@ -238,8 +240,10 @@ auto CowMonitor::classification(cv::Mat inputImg,
         i++;
     }
 }
+
 auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, MAX_NUM_PF> &result_ids) -> bool{
+                          std::array<int, MAX_NUM_PF> &result_ids,
+                          std::string &msgOut) -> bool{
     cv::Rect nBox(-1,-1,-1,-1);
     std::stringstream MSG;
     int total = result_box.size();
@@ -254,7 +258,7 @@ auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
         if(i != MAX_NUM_PF-1) MSG << ",";
     }
     MSG << " " << now << "000000000";
-    std::cout << MSG.str() << endl;
+    msgOut = MSG.str();
     try {
         // Connect to the client
         cli_->connect(connOpts_);
@@ -278,12 +282,17 @@ auto CowMonitor::Stream(int width, int height) -> bool{
     Camera.set(cv::CAP_PROP_FRAME_WIDTH, width);
     Camera.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     vW_ = width; vH_ = height;
+    std::cout << "====================================\n";
     cout << "Opening Camera...\n";
     if(!Camera.open()){
         cerr << "Error opening the camera\n";
         return -1;
     }
+    else std::cout << "Open camera successfully.\n";
+    std::cout << "====================================\n";
+    std::cout << "Start Streaming...\n";
     for(;;){
+        /* setup current time, foldername, .dat file stream */
         std::time_t now = std::time(nullptr);
         char ymd[12], hms[12];
         strftime(ymd, sizeof(ymd), "%Y_%m_%d", std::localtime(&now));
@@ -291,51 +300,42 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         std::string YMD(ymd), HMS(hms);
         std::string img_dir = "/home/data/img/"+YMD+"/";
         std::filesystem::create_directories(img_dir);
-#ifdef CSV_RELEASE
-        std::ofstream csvFile("/home/data/"+YMD+".csv", std::ios::app);
-        if(!csvFile.is_open()) cerr << "open csv failed\n";
-#endif
-        printf("\r%s-%s", YMD.c_str(), HMS.c_str());
-        fflush(stdout);
+        std::ofstream datFile("/home/data/"+YMD+".dat", std::ios::app);
+        if(!datFile.is_open()) cerr << "open .dat failed\n";
+        std::cout << '\r' << YMD << '-' << HMS << std::flush;
+
+        /* capture image */
         Camera.grab();
         Camera.retrieve(frame);
         cv::flip(frame, frame, -1);
-        vector<cv::Rect> result_box;
-        if(detection(frame, result_box)){
-            std::array<int,MAX_NUM_PF> result_ids;
-            result_ids.fill(-1);
-            classification(frame, result_box, result_ids);
-            printf("\t%d %d %d %d %d \n", result_box.size(),
-                   result_ids[0], result_ids[1], result_ids[2], result_ids[3]);
-            fflush(stdout);
-            std::filesystem::current_path(img_dir);
-            cv::imwrite(YMD+"-"+HMS+".jpg", frame);
-            /*
-             * TODO: mqtt publish
-             *  */
-            mqtt_pub(now, result_box, result_ids);
-#ifdef CSV_RELEASE
-            csvFile << YMD+"-"+HMS << "," << result_box.size() << ",";
-            if(result_box.size() < MAX_NUM_PF + 1)
-                std::fill_n(std::back_inserter(result_box),
-                            MAX_NUM_PF-result_box.size(), nValue);
 
-            for(int &id:result_ids) csvFile << id << ",";
-            std::for_each(result_box.begin(), result_box.end(),
-                    [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
-                                                << tmp.y << ";"
-                                                << tmp.width << ";"
-                                                << tmp.height << ","; });
-            csvFile << "\n";
-            csvFile.flush();
-#endif
+        /* pre-declare result variable */
+        vector<cv::Rect> result_box;
+        std::array<int,MAX_NUM_PF> result_ids;
+        result_ids.fill(-1);
+
+        /* if detect result is true -> classify */
+        if(detection(frame, result_box)){
+            classification(frame, result_box, result_ids);
+
+            /* log output */
+            std::cout << '\t' << result_box.size();
+            for(auto &id:result_ids) std::cout << id << " ";
+            std::cout << '\n';
+
+             /* mqtt publish */
+            std::string msg;
+            if(mqtt_pub(now, result_box, result_ids, msg)){
+                datFile << msg << "\n";
+                datFile.flush();
+            }
+
+            /* save image */
+            cv::imwrite(img_dir+YMD+"-"+HMS+".jpg", frame);
         }
         else{
-#ifdef RELEASE
-            std::filesystem::current_path("/home/data/");
-#endif
-            printf("\t%d %d %d %d %d", 0, -1, -1, -1, -1);
-            fflush(stdout);
+            std::cout << '\t' << result_box.size();
+            for(auto &id:result_ids) std::cout << id << " ";
         }
     }
     Camera.release();
@@ -355,19 +355,19 @@ auto CowMonitor::RunImage(std::string fileName) -> void{
         std::fill_n(result_ids.begin(), MAX_NUM_PF, -1);
         classification(img, result_box, result_ids);
         {
-            std::ofstream csvFile("./detect.csv", std::ios::app);
+            std::ofstream datFile("./detect.csv", std::ios::app);
             Timer timer;
             std::fill_n(std::back_inserter(result_box),
                         MAX_NUM_PF-result_box.size(), nValue);
             for(int &id:result_ids){
-                csvFile << id << ",";
+                datFile << id << ",";
             }
             std::for_each(result_box.begin(), result_box.end(),
-                    [&](cv::Rect &tmp){ csvFile << tmp.x << ";"
+                    [&](cv::Rect &tmp){ datFile << tmp.x << ";"
                                                 << tmp.y << ";"
                                                 << tmp.width << ";"
                                                 << tmp.height << ","; });
-            csvFile << "\n";
+            datFile << "\n";
         }
         for(auto id:result_ids)
             std::cout << id << " ";

@@ -51,7 +51,8 @@ namespace cm{
                                 std::vector<cv::Rect> result_box,
                                 std::array<int, MAX_NUM_PF> &result) -> void;
             auto mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, MAX_NUM_PF> &result) -> bool;
+                          std::array<int, MAX_NUM_PF> &result,
+                          std::string &msgOut) -> bool;
 
             int vW_, vH_;
             std::vector< std::vector<float> > refs_;
