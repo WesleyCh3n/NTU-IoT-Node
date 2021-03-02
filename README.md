@@ -64,7 +64,7 @@ Make sure your prerequisites are built.
 ```bash
 git clone https://github.com/WesleyCh3n/ntu-iot-node
 cd cc/recognition/
-make clean; make RELEASE=1
+make clean; make RELEASE=1 VERSION=<version number>
 ```
 you will see something like
 ```bash
