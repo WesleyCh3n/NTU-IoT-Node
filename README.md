@@ -74,3 +74,11 @@ Compiling ntu-iot-node
 Compiling Complete
 ```
 then can type `./ntu-iot-node -h` to see the usage.
+
+### Docker testing
+
+After compiling complete, you can use this docekr image to verify
+```bash
+docker run -it --rm --privileged=true -w /home/ -v `pwd`:/home/ -v /opt/vc:/opt/vc --device=/dev/vchiq --device=/dev/vcsm cpp-slim bash
+$ ./ntu-iot-node -h
+```
