@@ -86,8 +86,9 @@ void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
     ip_ = "tcp://" + ip;
     user_ = user;
     pwd_ = pwd;
+    std::string cliID = "node" + node_;
     /* TODO: use this wierd ptr & static solve initilize mqtt client */
-    static mqtt::client cli(ip_,user_);
+    static mqtt::client cli(ip_,cliID);
     cli_ = &cli;
     connOpts_.set_keep_alive_interval(20);
     connOpts_.set_clean_session(true);
