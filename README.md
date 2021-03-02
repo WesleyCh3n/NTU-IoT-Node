@@ -6,7 +6,7 @@ streaming also recognizing individual cow faces by edge computing (with
 Tensorflow Lite etc).
 
 This repo contains c++ and python version. *The python version is deprecated, but still
-usable*. The main program uses c++ which is in
+usable*(in `python` branch). The main program uses c++ which is in
 [cc/recognition](https://github.com/WesleyCh3n/ntu-iot-node/tree/main/cc/recognition)
  folder.
 
@@ -19,6 +19,7 @@ Usage:
   ntu-iot-node [OPTION...]
 
   -s, --stream        Start streaming
+  -n, --node arg      node number (default: )
   -i, --image arg     Recognize Image
   -m, --mode arg      mode: 0:detect 1:classify 2:recognize (default: 2)
   -D, --detect arg    Detect model path (default:
@@ -26,8 +27,11 @@ Usage:
   -C, --classify arg  Classify model path (default:
                       ./model/mobilenetv2-128.tflite)
   -R, --ref arg       class reference (default: ./19-01.tsv)
+  -q, --mqtt arg      mqtt address
+  -u, --user arg      mqtt username
+  -p, --pwd arg       mqtt password
+  -v, --version       ntu-iot-node version
   -h, --help          Print usage
-
 ```
 
 ## Build
