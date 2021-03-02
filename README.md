@@ -79,6 +79,6 @@ then can type `./ntu-iot-node -h` to see the usage.
 
 After compiling complete, you can use this docekr image to verify
 ```bash
-docker run -it --rm --privileged=true -w /home/ -v `pwd`:/home/ -v /opt/vc:/opt/vc --device=/dev/vchiq --device=/dev/vcsm cpp-slim bash
-$ ./ntu-iot-node -h
+$ docker run -it --rm --privileged=true -w /home/ -v `pwd`:/home/ -v /opt/vc:/opt/vc --device=/dev/vchiq --device=/dev/vcsm cpp-slim bash
+root@CONTAINER_ID:/home# ./ntu-iot-node -h
 ```
