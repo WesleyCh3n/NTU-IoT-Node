@@ -26,7 +26,7 @@ INCLUDES := \
 -I$(CXXOPT_DIR)/include \
 -I$(MQTTC_DIR)/build/install/include \
 -I$(MQTTCXX_DIR)/build/install/include \
--I/home/pi/ntu-iot-node/cc/recognition
+-I.
 
 LIBDIRS := \
 -L$(TF_DIR)/tensorflow/lite/tools/make/gen/rpi_armv7l/lib \
