@@ -51,7 +51,8 @@ class Timer{
 
 /*=================== CowMonitor Class definition ===================*/
 
-bool CowMonitor::Init(std::string node, std::string model_path[], std::string ref, int mode){
+bool CowMonitor::Init(std::string node, std::string model_path[],
+                      std::string ref, int mode){
     node_ = node;
     std::cout << std::left << "====================================\n"
               << std::setw(16) << "Version" << ": " << VERSION << '\n'
@@ -237,7 +238,8 @@ auto CowMonitor::classification(cv::Mat inputImg,
         }
         std::array<float, CLASS_NUM> tmp;
         for(int k=0; k<refs_.size(); k++)
-            tmp[k] = boost::math::tools::l2_distance(cm::model::cvtTensor(c_output_tensor_),refs_[k]);
+            tmp[k] = boost::math::tools::l2_distance(
+                     cm::model::cvtTensor(c_output_tensor_),refs_[k]);
         result[i] = std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
         i++;
     }
@@ -327,7 +329,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
 
              /* mqtt publish */
             std::string msg;
-            if(mqtt_pub(now, result_box, result_ids, msg)){
+            if(!mqtt_pub(now, result_box, result_ids, msg)){
                 datFile << msg << "\n";
                 datFile.flush();
             }
