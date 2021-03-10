@@ -69,7 +69,7 @@ $(TARGET):$(OBJFILES)
 	@$(CC) $(CCFLAGS) -o $(TARGET) $(OBJFILES) $(INCLUDES) $(LIBDIRS) $(LIBS)
 	@echo "Compiling Complete"
 
-$(OBJFILES):$(COWMONITOR_SRC)
+$(OBJFILES):$(SRC)
 	@echo "Compiling VERSION: $(VERSION)"
 	@echo "Compiling $(OBJFILES)"
 	@$(CC) $(CCFLAGS) -c $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
