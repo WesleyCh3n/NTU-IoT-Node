@@ -51,6 +51,16 @@ class Timer{
 
 /*=================== CowMonitor Class definition ===================*/
 
+/*
+ * Pub func: Initialize parameter
+ * @param
+ *     [in] node: node number
+ *     [in] model_path: list of model path. [detection, classification]
+ *     [in] ref: reference vector of cow
+ *     [in] mode: 0->detect,1->classify,2->recognize
+ * @return
+ *     Init Status
+ *  */
 bool CowMonitor::Init(std::string node, std::string model_path[],
                       std::string ref, int mode){
     node_ = node;
@@ -61,6 +71,7 @@ bool CowMonitor::Init(std::string node, std::string model_path[],
               << std::setw(16) << "Mqtt" << ": " << ip_ << '\n'
               << std::setw(16) << "Mqtt user" << ": " << user_ << '\n';
     if(!ref.empty()) refs_ = cm::model::readTSV(ref);
+    // TODO: Read fence cfg into private attribute
     switch(mode){
         case cm::DETECT:{
             bool d_status = initdModel(model_path[0]);
@@ -82,7 +93,13 @@ bool CowMonitor::Init(std::string node, std::string model_path[],
     return false;
 }
 
-
+/*
+ * Initialize mqtt config
+ * @param
+ *     [in] ip: up of mqtt server
+ *     [in] user: username of mqtt server
+ *     [in] pwd: password of mqtt server
+ *  */
 void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
     ip_ = "tcp://" + ip;
     user_ = user;
@@ -98,6 +115,13 @@ void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
 
 }
 
+/*
+ * Allocate detection model to tensor
+ * @param
+ *     [in] model_path: model path
+ * @return
+ *     status
+ *  */
 bool CowMonitor::initdModel(std::string model_path){
     d_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver d_resolver;
@@ -118,6 +142,13 @@ bool CowMonitor::initdModel(std::string model_path){
     return true;
 }
 
+/*
+ * Allocate classification model to tensor
+ * @param
+ *     [in] model_path: model path
+ * @return
+ *     status
+ *  */
 bool CowMonitor::initcModel(std::string model_path){
     c_model_= tflite::FlatBufferModel::BuildFromFile(model_path.c_str());
     tflite::ops::builtin::BuiltinOpResolver c_resolver;
@@ -137,6 +168,17 @@ bool CowMonitor::initcModel(std::string model_path){
     return true;
 }
 
+/*
+ * Preprocess input cv::Mat image for yolo detection
+ * @param
+ *     [out] src: input image
+ *     [in] width: yolo model input width
+ *     [in] height: yolo model input height
+ *     [in] *norm(pixel &): pointer of function of normalization take pixel as
+ *                          reference input
+ * @return
+ *     preprocessed image
+ *  */
 auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height,
                                void (*norm)(Pixel&)) -> cv::Mat{
     // convert to float; BGR -> RGB
@@ -155,13 +197,15 @@ auto CowMonitor::matPreprocess(cv::Mat &src, uint width, uint height,
     return dst;
 }
 
-/**
+/*
  * Find valid bbox by confidence and non-maximum suppression
- *
- * @param[in] box: result of yolo bbox
- * @param[in] score: result of yolo score
- * @param[out] result: valid bbox with cv::Rect(xmin,xmax,w,h) as vector
- */
+ * @param
+ *     [in] box: raw result of yolo bbox
+ *     [in] score: raw result of yolo score
+ *     [out] result: valid bbox with cv::Rect(xmin,xmax,w,h) as vector
+ * @return
+ *     status: if no valid bbox return false else true
+ *  */
 auto CowMonitor::yoloResult(vector<float> &box,
                 vector<float> &score,
                 float thres,
@@ -198,6 +242,14 @@ auto CowMonitor::yoloResult(vector<float> &box,
     return true;
 }
 
+/*
+ * Detection pipeline for yolo
+ * @param
+ *     [in] inputImg: input image
+ *     [out] result_box: result bounding box of input image
+ * @return
+ *     status: if no valid bbox return false else true
+ *  */
 auto CowMonitor::detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool{
     inputImg = matPreprocess(inputImg, d_input_dim_.w, d_input_dim_.h,
@@ -212,6 +264,13 @@ auto CowMonitor::detection(cv::Mat inputImg,
                       cm::model::yolov4::CON_THRES, result_box);
 }
 
+/*
+ * Classification pipeline base on yolo result
+ * @param
+ *     [in] inputImg: input image
+ *     [in] detect_box: detection result box
+ *     [out] result: ids base on bbox
+ *  */
 auto CowMonitor::classification(cv::Mat inputImg,
                                 std::vector<cv::Rect> detect_box,
                                 std::array<int, MAX_NUM_PF> &result) -> void{
@@ -279,6 +338,14 @@ auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
     }
 }
 
+/*
+ * Start streaming
+ * @param
+ *     [in] width: capture image width
+ *     [in] height: capture image height
+ * @return
+ *     status of Stream function
+ *  */
 auto CowMonitor::Stream(int width, int height) -> bool{
     raspicam::RaspiCam_Cv Camera;
     cv::Mat frame;
@@ -318,8 +385,10 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         std::array<int,MAX_NUM_PF> result_ids;
         result_ids.fill(-1);
 
-        /* if detect result is true -> classify */
+        /* if detection have any result */
         if(detection(frame, result_box)){
+            // TODO: check result_box in which fence
+            // func iou_calc(box) -> {fence_id, box, status}
             classification(frame, result_box, result_ids);
 
             /* log output */
