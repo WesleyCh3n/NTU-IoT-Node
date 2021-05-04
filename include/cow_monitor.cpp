@@ -169,11 +169,11 @@ bool CowMonitor::initcModel(std::string model_path){
 }
 
 /*
- * Preprocess input cv::Mat image for yolo detection
+ * Preprocess input cv::Mat image
  * @param
  *     [out] src: input image
- *     [in] width: yolo model input width
- *     [in] height: yolo model input height
+ *     [in] width: model input width
+ *     [in] height: model input height
  *     [in] *norm(pixel &): pointer of function of normalization take pixel as
  *                          reference input
  * @return
