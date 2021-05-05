@@ -52,48 +52,6 @@ class Timer{
 /*=================== CowMonitor Class definition ===================*/
 
 /*
- * Pub func: Initialize parameter
- * @param
- *     [in] node: node number
- *     [in] model_path: list of model path. [detection, classification]
- *     [in] ref: reference vector of cow
- *     [in] mode: 0->detect,1->classify,2->recognize
- * @return
- *     Init Status
- *  */
-bool CowMonitor::Init(std::string node, std::string model_path[],
-                      std::string ref, int mode){
-    node_ = node;
-    std::cout << std::left << "====================================\n"
-              << std::setw(16) << "Version" << ": " << VERSION << '\n'
-              << std::setw(16) << "Node" << ": " << node_ << '\n'
-              << std::setw(16) << "Mode" << ": " << mode << '\n'
-              << std::setw(16) << "Mqtt" << ": " << ip_ << '\n'
-              << std::setw(16) << "Mqtt user" << ": " << user_ << '\n';
-    if(!ref.empty()) refs_ = cm::model::readTSV(ref);
-    // TODO: Read fence cfg into private attribute
-    switch(mode){
-        case cm::DETECT:{
-            bool d_status = initdModel(model_path[0]);
-            return d_status;
-            break;
-        }
-        case cm::CLASSIFY:{
-            bool s_status = initcModel(model_path[1]);
-            return s_status;
-            break;
-        }
-        case cm::RECOGNIZE:{
-            bool d_status = initdModel(model_path[0]);
-            bool s_status = initcModel(model_path[1]);
-            return (d_status && s_status);
-            break;
-        }
-    }
-    return false;
-}
-
-/*
  * Initialize mqtt config
  * @param
  *     [in] ip: up of mqtt server
@@ -112,7 +70,76 @@ void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
     connOpts_.set_clean_session(true);
     connOpts_.set_user_name(user_);
     connOpts_.set_password(pwd_);
+}
 
+/*
+ * Pub func: Initialize parameter
+ * @param
+ *     [in] node: node number
+ *     [in] model_path: list of model path. [detection, classification]
+ *     [in] ref: reference vector of cow
+ *     [in] mode: 0->detect,1->classify,2->recognize
+ * @return
+ *     Init Status
+ *  */
+bool CowMonitor::Init(std::string node, std::string model_path[],
+                      std::string ref_path, std::string dict_path,
+                      std::string fence_path, int mode){
+    node_ = node;
+    std::cout << std::left << "====================================\n"
+              << std::setw(16) << "Version" << ": " << VERSION << '\n'
+              << std::setw(16) << "Node" << ": " << node_ << '\n'
+              << std::setw(16) << "Mode" << ": " << mode << '\n'
+              << std::setw(16) << "Mqtt" << ": " << ip_ << '\n'
+              << std::setw(16) << "Mqtt user" << ": " << user_ << '\n';
+    initCowRefs(ref_path, dict_path);
+    initFenceCfg(fence_path);
+    switch(mode){
+        case cm::DETECT:{
+            bool d_status = initdModel(model_path[0]);
+            return d_status;
+            // break;
+        }
+        case cm::CLASSIFY:{
+            bool s_status = initcModel(model_path[1]);
+            return s_status;
+            // break;
+        }
+        case cm::RECOGNIZE:{
+            bool d_status = initdModel(model_path[0]);
+            bool s_status = initcModel(model_path[1]);
+            return (d_status && s_status);
+            // break;
+        }
+    }
+    return false;
+}
+
+void CowMonitor::initCowRefs(std::string ref_path, std::string dict_path) {
+    std::vector< std::vector<float> > feats = cm::model::readTSV(ref_path);
+    std::ifstream inFile(dict_path);
+    std::string id;
+    int i = 0;
+    while(getline(inFile, id)){
+        cowRefs_[i].id = std::stoi(id);
+        cowRefs_[i].feat = feats[i];
+        i++;
+    }
+}
+
+void CowMonitor::initFenceCfg(std::string fence_path){
+    std::vector< std::vector<int> > bboxes = cm::model::readCSV(fence_path);
+    for(int i=0; i<bboxes.size(); i++){
+        fences_[i].f_id = i;
+        int x = bboxes[i][0];
+        int y = bboxes[i][1];
+        int w = bboxes[i][2] - x;
+        int h = bboxes[i][3] - y;
+        fences_[i].bbox = cv::Rect(x, y, w, h);
+        // printf("%d: %d, %d, %d, %d\n", fences_[i].f_id,
+        //         fences_[i].bbox.x, fences_[i].bbox.y,
+        //         fences_[i].bbox.width, fences_[i].bbox.height);
+    }
 }
 
 /*
@@ -271,54 +298,51 @@ auto CowMonitor::detection(cv::Mat inputImg,
  *     [in] detect_box: detection result box
  *     [out] result: ids base on bbox
  *  */
-auto CowMonitor::classification(cv::Mat inputImg,
-                                std::vector<cv::Rect> detect_box,
-                                std::array<int, MAX_NUM_PF> &result) -> void{
-    /* TODO: Use stack method with fix output size(128) & result(6)
-     * std::array<std::array<float, 128>, 6> results; */
+auto CowMonitor::classification(cv::Mat inputImg) -> int{
 #ifdef BENCHMARK
     Timer timer;
 #endif
-    int i=0;
-    for(cv::Rect roi: detect_box){
-        if(i > MAX_NUM_PF-1) break;
-        cv::Mat cropImg = inputImg(roi);
-        cropImg = matPreprocess(cropImg,
-                c_input_dim_.w, c_input_dim_.h,
-                cm::model::mobilenetv2::norm);
-        memcpy(c_input_tensor_->data.f, cropImg.ptr<float>(0),
-                c_input_dim_.h * c_input_dim_.h *
-                c_input_dim_.c * sizeof(float));
-        {
+    // cv::Mat cropImg = inputImg(roi);
+    inputImg = matPreprocess(inputImg,
+            c_input_dim_.w, c_input_dim_.h,
+            cm::model::mobilenetv2::norm);
+    memcpy(c_input_tensor_->data.f, inputImg.ptr<float>(0),
+            c_input_dim_.h * c_input_dim_.h *
+            c_input_dim_.c * sizeof(float));
+    {
 #ifdef BENCHMARK
-            Timer timer;
+        Timer timer;
 #endif
-            c_interpreter_->Invoke();
-        }
-        std::array<float, CLASS_NUM> tmp;
-        for(int k=0; k<refs_.size(); k++)
-            tmp[k] = boost::math::tools::l2_distance(
-                     cm::model::cvtTensor(c_output_tensor_),refs_[k]);
-        result[i] = std::min_element(tmp.begin(),tmp.end()) - tmp.begin();
-        i++;
+        c_interpreter_->Invoke();
     }
+    std::array<float, CLASS_NUM> dists;
+    for(int k=0; k<cowRefs_.size(); k++)
+        dists[k] = boost::math::tools::l2_distance(
+                 cm::model::cvtTensor(c_output_tensor_),cowRefs_[k].feat);
+    return std::min_element(dists.begin(),dists.end()) - dists.begin();
 }
 
+void CowMonitor::resetFence(){
+    for(auto &f: fences_){
+        f.cow_id = -1;
+        f.cow_box = cv::Rect(-1,-1,-1,-1);
+    }
+}
 auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, MAX_NUM_PF> &result_ids,
+                          std::array<int, N_FENCE> &result_ids,
                           std::string &msgOut) -> bool{
     cv::Rect nBox(-1,-1,-1,-1);
     std::stringstream MSG;
     int total = result_box.size();
-    if(total < MAX_NUM_PF + 1)
-        std::fill_n(std::back_inserter(result_box), MAX_NUM_PF-total, nBox);
+    if(total < N_FENCE + 1)
+        std::fill_n(std::back_inserter(result_box), N_FENCE-total, nBox);
     MSG << "NTU_FEED,node=" << node_ << " total=" << total << ",";
-    for(size_t i=0; i<MAX_NUM_PF; i++){
+    for(size_t i=0; i<N_FENCE; i++){
         MSG << "id" << i << "=" << result_ids[i] << ","
             << "box" << i << "=" << "\"" << result_box[i].x << ","
             << result_box[i].y << "," << result_box[i].width << ","
             << result_box[i].height << "\"";
-        if(i != MAX_NUM_PF-1) MSG << ",";
+        if(i != N_FENCE-1) MSG << ",";
     }
     MSG << " " << now << "000000000";
     msgOut = MSG.str();
@@ -381,34 +405,50 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         cv::flip(frame, frame, -1);
 
         /* pre-declare result variable */
+        resetFence();
         vector<cv::Rect> result_box;
-        std::array<int,MAX_NUM_PF> result_ids;
-        result_ids.fill(-1);
 
         /* if detection have any result */
         if(detection(frame, result_box)){
-            // TODO: check result_box in which fence
-            // func iou_calc(box) -> {fence_id, box, status}
-            classification(frame, result_box, result_ids);
+            // classification(frame, result_box, result_ids);
+            int total = 0;
+            for(cv::Rect box:result_box)
+                cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 3);
+            for(Fence f: fences_){
+                cv::rectangle(frame, f.bbox, cv::Scalar(255, 0, 0), 3);
+            }
+            for(cv::Rect box: result_box){
+                for(Fence &f: fences_){
+                    if((box & f.bbox).area()/box.area() > 0.5){
+                        f.cow_id = cowRefs_[classification(frame(box))].id;
+                        f.cow_box = box;
+                        total ++;
+                    }
+                }
+            }
 
             /* log output */
-            std::cout << '\t' << result_box.size() << " ";
-            for(auto &id:result_ids) std::cout << id << " ";
-            std::cout << '\n';
+            if(total != 0){
+                std::cout << '\t' << total << " ";
+                for(Fence &f: fences_)
+                    std::cout << f.f_id << ":" << f.cow_id << " ";
+                std::cout << '\n';
+            }
 
              /* mqtt publish */
-            std::string msg;
-            if(!mqtt_pub(now, result_box, result_ids, msg)){
-                datFile << msg << "\n";
-                datFile.flush();
-            }
+            // std::string msg;
+            // if(!mqtt_pub(now, result_box, result_ids, msg)){
+            //     datFile << msg << "\n";
+            //     datFile.flush();
+            // }
 
             /* save image */
             cv::imwrite(img_dir+YMD+"-"+HMS+".jpg", frame);
         }
         else{
-            std::cout << '\t' << result_box.size();
-            for(auto &id:result_ids) std::cout << id << " ";
+            std::cout << '\t' << 0 << " ";
+            for(Fence &f: fences_)
+                std::cout << f.f_id << ":" << f.cow_id << " ";
         }
     }
     Camera.release();
@@ -418,32 +458,27 @@ auto CowMonitor::Stream(int width, int height) -> bool{
 auto CowMonitor::RunImage(std::string fileName) -> void{
     cv::Mat img = cv::imread(fileName);
     vW_ = img.cols; vH_ = img.rows;
-    cv::Rect nValue(-1,-1,-1,-1);
     vector<cv::Rect> result_box;
+    std::cout << "start detect\n";
     if(detection(img, result_box)){
         for(cv::Rect box:result_box)
             cv::rectangle(img, box, cv::Scalar(0, 255, 0), 3);
-        cv::imwrite("./result.jpg", img);
-        std::array<int,MAX_NUM_PF> result_ids;
-        std::fill_n(result_ids.begin(), MAX_NUM_PF, -1);
-        classification(img, result_box, result_ids);
-        {
-            std::ofstream datFile("./detect.csv", std::ios::app);
-            Timer timer;
-            std::fill_n(std::back_inserter(result_box),
-                        MAX_NUM_PF-result_box.size(), nValue);
-            for(int &id:result_ids){
-                datFile << id << ",";
-            }
-            std::for_each(result_box.begin(), result_box.end(),
-                    [&](cv::Rect &tmp){ datFile << tmp.x << ";"
-                                                << tmp.y << ";"
-                                                << tmp.width << ";"
-                                                << tmp.height << ","; });
-            datFile << "\n";
+        for(Fence f: fences_){
+            cv::rectangle(img, f.bbox, cv::Scalar(255, 0, 0), 3);
         }
-        for(auto id:result_ids)
-            std::cout << id << " ";
+        cv::imwrite("./result.jpg", img);
+        std::cout << "start classify\n";
+        for(cv::Rect box: result_box){
+            for(Fence &f: fences_){
+                if((box & f.bbox).area()/box.area() > 0.5){
+                    f.cow_id = cowRefs_[classification(img(box))].id;
+                }
+            }
+        }
+        for(Fence &f: fences_){
+            std::cout << "f_id" << f.f_id << ",";
+            std::cout << "cow_id" << f.cow_id << '\n';
+        }
     }
 }
 
@@ -460,6 +495,22 @@ auto cm::model::readTSV(std::string file) -> std::vector< std::vector<float> >{
         std::string tmp;
         while(getline(ss, tmp, '\t')) {
             vec.emplace_back(std::stof(tmp));
+        }
+        vecs.emplace_back(vec);
+    }
+    return vecs;
+}
+
+auto cm::model::readCSV(std::string file) -> std::vector< std::vector<int> >{
+    std::vector< std::vector<int> > vecs;
+    std::ifstream csvFile(file);
+    std::string line;
+    while(getline(csvFile, line)){
+        std::stringstream ss(line);
+        std::vector<int> vec;
+        std::string tmp;
+        while(getline(ss, tmp, ',')){
+            vec.emplace_back(std::stoi(tmp));
         }
         vecs.emplace_back(vec);
     }

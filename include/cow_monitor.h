@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <array>
 
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/interpreter.h"
@@ -12,7 +13,7 @@
 #include "opencv2/opencv.hpp"
 #include "mqtt/client.h"
 #define CLASS_NUM 19
-#define MAX_NUM_PF 4    // max number per frame
+#define N_FENCE 3    // max number of fence
 
 using namespace std;
 
@@ -29,11 +30,24 @@ namespace cm{
         struct InputDim{
             uint h, w, c;
         };
+        struct Fence{
+            int f_id;
+            cv::Rect bbox;
+            int cow_id=-1;
+            cv::Rect cow_box(-1,-1,-1,-1);
+        };
+        struct CowRef{
+            int id;
+            std::vector<float> feat;
+        };
         public:
             CowMonitor(){};
-            auto Init(std::string node, std::string model_path[],
-                      std::string ref, int mode) -> bool;
             auto InitMqtt(std::string ip, std::string user, std::string pwd) -> void;
+            auto Init(std::string node, std::string model_path[],
+                      std::string ref_path, std::string dict_path,
+                      std::string fence_path, int mode) -> bool;
+            void initCowRefs(std::string ref_path, std::string dict_path);
+            void initFenceCfg(std::string fence_path);
             auto Stream(int width=1280, int height=960) -> bool;
             auto RunImage(std::string fileName) -> void;
 
@@ -47,15 +61,15 @@ namespace cm{
                             float thres, std::vector<cv::Rect> &result) -> bool;
             auto detection(cv::Mat inputImg,
                            std::vector<cv::Rect> &result_box) -> bool;
-            auto classification(cv::Mat inputImg,
-                                std::vector<cv::Rect> result_box,
-                                std::array<int, MAX_NUM_PF> &result) -> void;
+            auto classification(cv::Mat inputImg) -> int;
+            void resetFence();
             auto mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, MAX_NUM_PF> &result,
+                          std::array<int, N_FENCE> &result,
                           std::string &msgOut) -> bool;
 
             int vW_, vH_;
-            std::vector< std::vector<float> > refs_;
+            std::array<Fence, N_FENCE> fences_;
+            std::array<CowRef, CLASS_NUM> cowRefs_;
             InputDim d_input_dim_;
             std::unique_ptr<tflite::FlatBufferModel> d_model_;
             std::unique_ptr<tflite::Interpreter> d_interpreter_;
@@ -84,6 +98,10 @@ namespace cm{
         template<typename T>
         auto readTSV(std::string file) -> std::vector< std::vector<T> >;
         auto readTSV(std::string file) -> std::vector< std::vector<float> >;
+
+        template<typename T>
+        auto readCSV(std::string file) -> std::vector< std::vector<T> >;
+        auto readCSV(std::string file) -> std::vector< std::vector<int> >;
 
         namespace yolov4{
             const float CON_THRES = 0.6;

@@ -14,8 +14,10 @@ int main(int argc, char** argv){
         ("i,image", "Recognize Image", cxxopts::value<std::string>())
         ("m,mode", "mode: 0:detect 1:classify 2:recognize", cxxopts::value<int>()->default_value("2"))
         ("D,detect", "Detect model path", cxxopts::value<std::string>()->default_value("./model/yolov4-tiny-416-fp16.tflite"))
-        ("C,classify", "Classify model path", cxxopts::value<std::string>()->default_value("./model/mobilenetv2-128.tflite"))
-        ("R,ref", "class reference", cxxopts::value<std::string>()->default_value("./19-01.tsv"))
+        ("C,classify", "Classify model path", cxxopts::value<std::string>()->default_value("./model/mobilenetv2.tflite"))
+        ("R,ref", "class reference", cxxopts::value<std::string>()->default_value("./cfg/ref.8f.tsv"))
+        ("d,dict", "class id", cxxopts::value<std::string>()->default_value("./cfg/ref_dict.csv"))
+        ("f,fence", "fence bbox", cxxopts::value<std::string>()->default_value("./cfg/node02_fence.csv"))
         ("q,mqtt", "mqtt address", cxxopts::value<std::string>())
         ("u,user", "mqtt username", cxxopts::value<std::string>())
         ("p,pwd", "mqtt password", cxxopts::value<std::string>())
@@ -52,6 +54,8 @@ int main(int argc, char** argv){
         if(!cow_monitor.Init(result["node"].as<std::string>(),
                              model_path,
                              result["ref"].as<std::string>(),
+                             result["dict"].as<std::string>(),
+                             result["fence"].as<std::string>(),
                              result["mode"].as<int>())){
             cerr << "Stop!\n";
             return -1;
@@ -64,6 +68,8 @@ int main(int argc, char** argv){
         if(!cow_monitor.Init(result["node"].as<std::string>(),
                              model_path,
                              result["ref"].as<std::string>(),
+                             result["dict"].as<std::string>(),
+                             result["fence"].as<std::string>(),
                              result["mode"].as<int>())){
             cerr << "Stop!\n";
             return -1;
