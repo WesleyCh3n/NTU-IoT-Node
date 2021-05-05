@@ -1,6 +1,6 @@
 
 VERSION := $(V)
-RELEASEFILES := ../ntu-iot-node ../model ../upload.sh ../19-01.tsv
+RELEASEFILES := ../ntu-iot-node ../model ../upload.sh ../cfg/
 RELEASETAR := ntu-iot-node_$(VERSION)_linux_arm32v7.tar.xz
 
 all: GITUPLOAD
