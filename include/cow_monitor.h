@@ -33,8 +33,8 @@ namespace cm{
         struct Fence{
             int f_id;
             cv::Rect bbox;
-            int cow_id=-1;
-            cv::Rect cow_box(-1,-1,-1,-1);
+            int cow_id = -1;
+            cv::Rect cow_box;
         };
         struct CowRef{
             int id;
@@ -63,9 +63,7 @@ namespace cm{
                            std::vector<cv::Rect> &result_box) -> bool;
             auto classification(cv::Mat inputImg) -> int;
             void resetFence();
-            auto mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, N_FENCE> &result,
-                          std::string &msgOut) -> bool;
+            auto mqtt_pub(std::string MSG) -> bool;
 
             int vW_, vH_;
             std::array<Fence, N_FENCE> fences_;

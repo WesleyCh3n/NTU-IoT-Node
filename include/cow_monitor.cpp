@@ -328,28 +328,12 @@ void CowMonitor::resetFence(){
         f.cow_box = cv::Rect(-1,-1,-1,-1);
     }
 }
-auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
-                          std::array<int, N_FENCE> &result_ids,
-                          std::string &msgOut) -> bool{
-    cv::Rect nBox(-1,-1,-1,-1);
-    std::stringstream MSG;
-    int total = result_box.size();
-    if(total < N_FENCE + 1)
-        std::fill_n(std::back_inserter(result_box), N_FENCE-total, nBox);
-    MSG << "NTU_FEED,node=" << node_ << " total=" << total << ",";
-    for(size_t i=0; i<N_FENCE; i++){
-        MSG << "id" << i << "=" << result_ids[i] << ","
-            << "box" << i << "=" << "\"" << result_box[i].x << ","
-            << result_box[i].y << "," << result_box[i].width << ","
-            << result_box[i].height << "\"";
-        if(i != N_FENCE-1) MSG << ",";
-    }
-    MSG << " " << now << "000000000";
-    msgOut = MSG.str();
+
+auto CowMonitor::mqtt_pub(std::string MSG) -> bool{
     try {
         // Connect to the client
         cli_->connect(connOpts_);
-        auto msg = mqtt::make_message("sensors", MSG.str());
+        auto msg = mqtt::make_message("sensors", MSG);
         msg->set_qos(1);
         cli_->publish(msg);
         cli_->disconnect();
@@ -360,6 +344,7 @@ auto CowMonitor::mqtt_pub(std::time_t &now, std::vector<cv::Rect> result_box,
             << exc.get_reason_code() << "]" << std::endl;
         return false;
     }
+    return true;
 }
 
 /*
@@ -403,47 +388,54 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         Camera.grab();
         Camera.retrieve(frame);
         cv::flip(frame, frame, -1);
+        cv::Mat image=frame.clone();
 
         /* pre-declare result variable */
         resetFence();
         vector<cv::Rect> result_box;
 
         /* if detection have any result */
-        if(detection(frame, result_box)){
-            // classification(frame, result_box, result_ids);
+        if(detection(image, result_box)){
             int total = 0;
-            for(cv::Rect box:result_box)
-                cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 3);
-            for(Fence f: fences_){
-                cv::rectangle(frame, f.bbox, cv::Scalar(255, 0, 0), 3);
-            }
             for(cv::Rect box: result_box){
                 for(Fence &f: fences_){
                     if((box & f.bbox).area()/box.area() > 0.5){
-                        f.cow_id = cowRefs_[classification(frame(box))].id;
+                        f.cow_id = cowRefs_[classification(image(box))].id;
                         f.cow_box = box;
                         total ++;
                     }
                 }
             }
 
-            /* log output */
             if(total != 0){
+                /* log output */
                 std::cout << '\t' << total << " ";
                 for(Fence &f: fences_)
                     std::cout << f.f_id << ":" << f.cow_id << " ";
                 std::cout << '\n';
+
+                /* make mqtt messege */
+                std::stringstream MSG;
+                MSG << "NTU_FEED_INDV,node=" << node_ << " ";
+                for(auto f:fences_){
+                    MSG << "f" << f.f_id << "=" << f.cow_id << ","
+                        << "b" << f.f_id << "=" << "\""
+                        << f.cow_box.x << ","
+                        << f.cow_box.y << ","
+                        << f.cow_box.width << ","
+                        << f.cow_box.height << "\",";
+                    if(f.cow_id != -1)
+                        MSG << f.cow_id << "=1,";
+                }
+                MSG << "total=" << total << " " << now << "000000000\n";
+
+                 /* mqtt publish */
+                mqtt_pub(MSG.str());
+                datFile << MSG.str();
+                datFile.flush();
+                /* save image */
+                cv::imwrite(img_dir+YMD+"-"+HMS+".jpg", frame);
             }
-
-             /* mqtt publish */
-            // std::string msg;
-            // if(!mqtt_pub(now, result_box, result_ids, msg)){
-            //     datFile << msg << "\n";
-            //     datFile.flush();
-            // }
-
-            /* save image */
-            cv::imwrite(img_dir+YMD+"-"+HMS+".jpg", frame);
         }
         else{
             std::cout << '\t' << 0 << " ";
