@@ -11,6 +11,7 @@
 
 #include "opencv2/opencv.hpp"
 using namespace std;
+#define LOG(x) std::cout << x << std::endl;
 typedef cv::Point3_<float> Pixel;
 
 
@@ -42,8 +43,10 @@ auto cvtTensor(TfLiteTensor* tensor) -> vector<T>;
 
 auto cvtTensor(TfLiteTensor* tensor) -> vector<float>{
     int nelem = 1;
-    for(int i=0; i<tensor->dims->size; ++i)
+    for(int i=0; i<tensor->dims->size; ++i){
         nelem *= tensor->dims->data[i];
+        LOG(tensor->dims->data[i]);
+    }
     vector<float> data(tensor->data.f, tensor->data.f+nelem);
     return data;
 }
@@ -51,7 +54,7 @@ auto cvtTensor(TfLiteTensor* tensor) -> vector<float>{
 int main(){
     // create model
     std::unique_ptr<tflite::FlatBufferModel> model =
-        tflite::FlatBufferModel::BuildFromFile("./yolov4-tiny-416-fp16.tflite");
+        tflite::FlatBufferModel::BuildFromFile("./yolov4-tiny-int8.tflite");
     tflite::ops::builtin::BuiltinOpResolver resolver;
     std::unique_ptr<tflite::Interpreter> interpreter;
     tflite::InterpreterBuilder(*model.get(), resolver)(&interpreter);
@@ -70,22 +73,29 @@ int main(){
     cv::Mat img = cv::imread("NODE29.jpg");
     cv::Mat inputImg = matPreprocess(img, WIDTH, HEIGHT);
 
-    // flatten rgb image to input layer.
-    float* inputImg_ptr = inputImg.ptr<float>(0);
-    memcpy(input_tensor->data.f, inputImg.ptr<float>(0),
-           WIDTH * HEIGHT * CHANNEL * sizeof(float));
+    double totalt = 0;
+    for(int i=0; i<10; i++){
+        // flatten rgb image to input layer.
+        float* inputImg_ptr = inputImg.ptr<float>(0);
+        memcpy(input_tensor->data.f, inputImg.ptr<float>(0),
+               WIDTH * HEIGHT * CHANNEL * sizeof(float));
 
-    // compute model instance
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    std::chrono::duration<double> elapsed_seconds;
-    start = std::chrono::system_clock::now();
-    interpreter->Invoke();
-    end = std::chrono::system_clock::now();
-    elapsed_seconds = end - start;
-    printf("s: %.10f\n" ,elapsed_seconds.count());
+        // compute model instance
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        std::chrono::duration<double> elapsed_seconds;
+        start = std::chrono::system_clock::now();
+        interpreter->Invoke();
+        end = std::chrono::system_clock::now();
+        elapsed_seconds = end - start;
+        printf("s: %.10f\n" ,elapsed_seconds.count());
+        totalt += elapsed_seconds.count();
+    }
+    LOG("ave");
+    LOG(totalt/10);
 
     vector<float> box_vec = cvtTensor(output_box);
     vector<float> score_vec = cvtTensor(output_score);
+
 
     vector<size_t> result_id;
     auto it = std::find_if(std::begin(score_vec), std::end(score_vec),
@@ -113,8 +123,10 @@ int main(){
 
     vector<int> ids;
     cv::dnn::NMSBoxes(rects, scores, 0.6, 0.4, ids);
-    for(int tmp: ids)
+    for(int tmp: ids){
+        std::cout << rects[tmp];
         cv::rectangle(img, rects[tmp], cv::Scalar(0, 255, 0), 3);
+    }
     cv::imwrite("./result.jpg", img);
     return 0;
 }
