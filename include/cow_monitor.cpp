@@ -416,6 +416,7 @@ auto CowMonitor::Stream(int width, int height) -> bool{
 
                 /* make mqtt messege */
                 std::stringstream MSG;
+
                 MSG << "NTU_FEED_INDV,node=" << node_ << " ";
                 for(auto f:fences_){
                     MSG << "f" << f.f_id << "=" << f.cow_id << ","
