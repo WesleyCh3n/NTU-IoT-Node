@@ -397,41 +397,40 @@ auto CowMonitor::Stream(int width, int height) -> bool{
         /* if detection have any result */
         if(detection(image, result_box)){
             int total = 0;
-            for(cv::Rect box: result_box){
-                for(Fence &f: fences_){
+            /* for stdout */
+            std::cout << '\t' << " ";
+            /* create MQTT msg purpose */
+            std::stringstream MSG;
+            MSG << "NTU_FEED_INDV,node=" << node_ << " ";
+            /* iterate all fence */
+            for(Fence &f: fences_){
+                /* test which result box in this fence */
+                for(cv::Rect box: result_box){
                     if((box & f.bbox).area()/box.area() > 0.5){
+                        /* classify who is it and store into fence.cow_id */
                         f.cow_id = cowRefs_[classification(image(box))].id;
                         f.cow_box = box;
                         total ++;
                     }
                 }
+                /* for stdout */
+                std::cout << f.f_id << ":" << f.cow_id << " ";
+                /* create proper MQTT format */
+                MSG << "f" << f.f_id << "=" << f.cow_id << ","
+                    << "b" << f.f_id << "=" << "\""
+                    << f.cow_box.x << ","
+                    << f.cow_box.y << ","
+                    << f.cow_box.width << ","
+                    << f.cow_box.height << "\",";
+                if(f.cow_id != -1)
+                    MSG << f.cow_id << "=1,";
             }
-
+            std::cout << '\n';
+            MSG << "total=" << total << " " << now << "000000000\n";
+            std::cout << MSG.str();
             if(total != 0){
-                /* log output */
-                std::cout << '\t' << total << " ";
-                for(Fence &f: fences_)
-                    std::cout << f.f_id << ":" << f.cow_id << " ";
-                std::cout << '\n';
-
-                /* make mqtt messege */
-                std::stringstream MSG;
-
-                MSG << "NTU_FEED_INDV,node=" << node_ << " ";
-                for(auto f:fences_){
-                    MSG << "f" << f.f_id << "=" << f.cow_id << ","
-                        << "b" << f.f_id << "=" << "\""
-                        << f.cow_box.x << ","
-                        << f.cow_box.y << ","
-                        << f.cow_box.width << ","
-                        << f.cow_box.height << "\",";
-                    if(f.cow_id != -1)
-                        MSG << f.cow_id << "=1,";
-                }
-                MSG << "total=" << total << " " << now << "000000000\n";
-
                  /* mqtt publish */
-                mqtt_pub(MSG.str());
+                // mqtt_pub(MSG.str());
                 datFile << MSG.str();
                 datFile.flush();
                 /* save image */
