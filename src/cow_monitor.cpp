@@ -93,11 +93,13 @@ bool CowMonitor::initFenceCfg(std::string fence_path){
 }
 
 
-int CowMonitor::cal_l2(std::vector<float> input){
+int CowMonitor::cal_l2(std::vector<float> input, float &min_d){
     std::array<float, CLASS_NUM> dists;
     for(int k=0; k<cowRefs_.size(); k++)
         dists[k] = boost::math::tools::l2_distance(input,cowRefs_[k].feat);
-    return std::min_element(dists.begin(),dists.end()) - dists.begin();
+    int index = std::min_element(dists.begin(),dists.end()) - dists.begin();
+    min_d = dists[index];
+    return index;
 }
 
 
@@ -105,7 +107,7 @@ void CowMonitor::resetFence(){
     for(auto &f: fences_){
         f.cow_id = -1;
         f.cow_box = cv::Rect(-1,-1,-1,-1);
-        /* f.status = false; */
+        f.min_d = 0;
     }
 }
 
@@ -139,8 +141,8 @@ bool CowMonitor::recognize_pipeline(cv::Mat image, int &total){
             /* test which result box in this fence */
             for(cv::Rect box: result_box){
                 if((box & f.bbox).area()/box.area() > 0.5){
-                    f.cow_id =
-                        cowRefs_[cal_l2(classify_model_->invoke(image(box)))].id;
+                    int index = cal_l2(classify_model_->invoke(image(box)), f.min_d);
+                    f.cow_id = cowRefs_[index].id;
                     f.cow_box = box;
                     total ++;
                 }
@@ -180,7 +182,6 @@ bool CowMonitor::Stream(int width, int height){
         Camera.retrieve(frame);
         cv::flip(frame, frame, -1);
         cv::Mat image=frame.clone();
-        resetFence();
 
         /* setup current time */
         std::time_t now = std::time(nullptr);
@@ -256,6 +257,7 @@ std::string CowMonitor::create_msg(std::string db_table, time_t now, int total){
     MSG << db_table <<",node=" << node_ << " ";
     for(auto f: fences_){
         MSG << "f" << f.f_id << "=" << f.cow_id << ","
+            << "f_d" << f.f_id << "=" << f.min_d << ","
             << "b" << f.f_id << "=" << "\""
             << f.cow_box.x << "," << f.cow_box.y << ","
             << f.cow_box.width << "," << f.cow_box.height << "\",";

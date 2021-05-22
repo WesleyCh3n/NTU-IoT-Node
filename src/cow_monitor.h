@@ -23,6 +23,7 @@ class CowMonitor{
         /* cow info */
         int cow_id = -1;
         cv::Rect cow_box;
+        float min_d = 0;
     };
     struct CowRef{
         int id;
@@ -36,7 +37,7 @@ class CowMonitor{
 
 
     private:
-        int cal_l2(std::vector<float> input);
+        int cal_l2(std::vector<float> input, float &min_d);
         bool initCowRefs(std::string ref_path, std::string dict_path);
         bool initFenceCfg(std::string fence_path);
         void resetFence();
