@@ -23,11 +23,6 @@ class CowMonitor{
         /* cow info */
         int cow_id = -1;
         cv::Rect cow_box;
-        /* [> fence status <]
-         * bool status = false;
-         * deque<bool> history{0, 0, 0}; */
-        /* [> cow status <]
-         * bool e_status = false; */
     };
     struct CowRef{
         int id;
@@ -35,7 +30,6 @@ class CowMonitor{
     };
     public:
         CowMonitor(){};
-        void InitMqtt(std::string ip, std::string user, std::string pwd);
         bool Init(std::map<std::string, std::string> conf_map);
         bool Stream(int width=1280, int height=960);
         void RunImage(std::string directory);

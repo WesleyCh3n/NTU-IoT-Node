@@ -23,16 +23,6 @@ const char *VERSION = NTU_IOT_NODE_VERSION;
 /*=================== CowMonitor Class definition ===================*/
 
 /*
- * Initialize mqtt config
- * @param
- *     [in] ip: up of mqtt server
- *     [in] user: username of mqtt server
- *     [in] pwd: password of mqtt server
- *  */
-void CowMonitor::InitMqtt(std::string ip, std::string user, std::string pwd){
-}
-
-/*
  * Pub func: Initialize parameter
  * @param
  *     [in] node: node number
@@ -98,9 +88,6 @@ bool CowMonitor::initFenceCfg(std::string fence_path){
         int w = bboxes[i][2] - x;
         int h = bboxes[i][3] - y;
         fences_[i].bbox = cv::Rect(x, y, w, h);
-        // printf("%d: %d, %d, %d, %d\n", fences_[i].f_id,
-        //         fences_[i].bbox.x, fences_[i].bbox.y,
-        //         fences_[i].bbox.width, fences_[i].bbox.height);
     }
     return true;
 }
@@ -155,29 +142,9 @@ bool CowMonitor::recognize_pipeline(cv::Mat image, int &total){
                     f.cow_id =
                         cowRefs_[cal_l2(classify_model_->invoke(image(box)))].id;
                     f.cow_box = box;
-                    /* [> fence status <]
-                     * f.status = true; */
                     total ++;
                 }
             }
-            /* [> fence status <]
-             * if (f.status == true) {
-             *     if(f.history.size() == 3)
-             *         f.history.pop_front();
-             *     f.history.push_back(true);
-             * } else {
-             *     if(f.history.size() == 3)
-             *         f.history.pop_front();
-             *     f.history.push_back(false);
-             * }
-             * [> update eat status for each fence <]
-             * if (f.history.at(0)==0 && f.history.at(1)==1 &&
-             *     f.history.at(2)==1 && f.e_status==0) {
-             *     f.e_status = true;
-             * } else if (f.history.at(0)==1 && f.history.at(1)==0 &&
-             *            f.history.at(2)==0 && f.e_status==1) {
-             *     f.e_status = false;
-             * } */
         }
         if (total > 0) return true;
     }
@@ -280,8 +247,6 @@ void CowMonitor::RunImage(std::string directory){
         std::cout << YMD << '-' << HMS << '\t' <<  total << " ";
         for(auto &f: fences_)
             std::cout << f.f_id << ":" << f.cow_id << " ";
-            /* std::cout << f.f_id << ":" << f.cow_id << ", e: " << f.e_status
-             *     << ", Q: " << f.history.at(0) << f.history.at(1) << f.history.at(2) << " |"; */
         std::cout << '\n';
     }
 }
