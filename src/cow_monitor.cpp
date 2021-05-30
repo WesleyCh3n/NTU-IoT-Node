@@ -190,7 +190,7 @@ bool CowMonitor::Stream(int width, int height){
         strftime(hms, sizeof(hms), "%H_%M_%S", std::localtime(&now));
         std::string YMD(ymd), HMS(hms);
         /* setup save image filder */
-        std::string img_dir = "/home/data/img/"+YMD+"/";
+        std::string img_dir = "./data/img/"+YMD+"/";
         fs::create_directories(img_dir);
         /* setup .dat */
         std::ofstream datFile("/home/data/"+YMD+".dat", std::ios::app);
