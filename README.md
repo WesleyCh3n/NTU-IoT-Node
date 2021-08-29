@@ -4,7 +4,7 @@
 
 
 This is NTU BME MS thesis project. The purpose of this project is using edge
-device (Rpi) to monitoring dairy cow feeding behaviour. The code is focus on
+device (Rpi) to monitoring dairy cow feeding behavior. The code is focus on
 streaming also recognizing individual cow faces by edge computing (with
 Tensorflow Lite etc).
 
@@ -46,17 +46,20 @@ Usage:
 
 ### Prerequisites
 
-All libraries are built in static and default location is in `/opt/`. Or, modify
-[Makefile](https://github.com/WesleyCh3n/ntu-iot-node/blob/main/cc/recognition/Makefile)
+All libraries are built in static and default location is placed in `/opt/`. Or, modify
+[Makefile](https://github.com/WesleyCh3n/ntu-iot-node/blob/main/cc/recognition/Makefile) (L15-L22)
  to the correct folder you built.
 
-- [OpenCV](https://github.com/opencv/opencv): 4.5.1
-- [Tensorflow Lite](https://www.tensorflow.org/lite/guide/build_rpi)
-- [RaspiCam](https://github.com/cedricve/raspicam)
-- [Boost](https://www.boost.org/): 1.75.0
-- [CXXopts](https://github.com/jarro2783/cxxopts): 2.2.1
 
-**Pre-built Library**: [https://drive.google.com/file/d/1sUfFn1Snn9hA2zla_V28DwZs32q0pdnA/view?usp=sharing]
+
+| Library                                          |                                                             Pre-built Link                                                              |
+|:------------------------------------------------ |:---------------------------------------------------------------------------------------------------------------------------------------:|
+| [OpenCV](https://bit.ly/2Y8KyJK): 4.5.1          | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/Ea9dXAB5_FFEkiS1rpi-MSEBfYcwGycAmncwgGH_wIopRQ?e=DVlq9n) |
+| [Tensorflow Lite](https://bit.ly/3ytc6Wu)        | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EXVf_skgIBRGtcKztyY_UEwBgz4plA9KuZknJZP5bRsS0g?e=PpI7Q5) |
+| [RaspiCam](https://bit.ly/38mTsFl)               | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EWg1uwwLXLZNhKlZdS_fvNQB8WBmaPwE7xcqeHvO33ZO-Q?e=jSVm2k) |
+| [CXXopts](https://bit.ly/3sU28MO): 2.2.1         | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EeVBIA9icu1PqTTEaqEmPGQBVgXDwS17zyBvpWaMTokjlw?e=pAMMjc) |
+| [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EYAFSv_7m8ZApNow1NAkgscB0wF1PgTwzkMANJNh5MvVzQ?e=9Upop1) |
+| [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EWwecZxkvQJChjfo1p0-pO8B5ForZc0lrurEVLEhFyWiOQ?e=Tkh4q5) |
 
 go to `/opt/` and extract all then good to go.
 
