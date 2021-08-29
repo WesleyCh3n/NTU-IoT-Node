@@ -1,5 +1,8 @@
 # NTU-IOT-NODE
 
+[![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
+
+
 This is NTU BME MS thesis project. The purpose of this project is using edge
 device (Rpi) to monitoring dairy cow feeding behaviour. The code is focus on
 streaming also recognizing individual cow faces by edge computing (with
