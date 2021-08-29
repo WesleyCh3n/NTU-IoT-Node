@@ -52,14 +52,14 @@ All libraries are built in static and default location is placed in `/opt/`. Or,
 
 
 
-| Library                                          |                                                             Pre-built Link                                                              |
-|:------------------------------------------------ |:---------------------------------------------------------------------------------------------------------------------------------------:|
-| [OpenCV](https://bit.ly/2Y8KyJK): 4.5.1          | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/Ea9dXAB5_FFEkiS1rpi-MSEBfYcwGycAmncwgGH_wIopRQ?e=DVlq9n) |
-| [Tensorflow Lite](https://bit.ly/3ytc6Wu)        | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EXVf_skgIBRGtcKztyY_UEwBgz4plA9KuZknJZP5bRsS0g?e=PpI7Q5) |
-| [RaspiCam](https://bit.ly/38mTsFl)               | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EWg1uwwLXLZNhKlZdS_fvNQB8WBmaPwE7xcqeHvO33ZO-Q?e=jSVm2k) |
-| [CXXopts](https://bit.ly/3sU28MO): 2.2.1         | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EeVBIA9icu1PqTTEaqEmPGQBVgXDwS17zyBvpWaMTokjlw?e=pAMMjc) |
-| [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EYAFSv_7m8ZApNow1NAkgscB0wF1PgTwzkMANJNh5MvVzQ?e=9Upop1) |
-| [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://gntuedutw-my.sharepoint.com/:u:/g/personal/b04612024_g_ntu_edu_tw/EWwecZxkvQJChjfo1p0-pO8B5ForZc0lrurEVLEhFyWiOQ?e=Tkh4q5) |
+| Library                                          |                                      Pre-built Link                                      |
+|:------------------------------------------------ |:----------------------------------------------------------------------------------------:|
+| [OpenCV](https://bit.ly/2Y8KyJK): 4.5.1          | [✔️](https://drive.google.com/file/d/1-HfoQ7DWhVF3rPNbOTsw3kopCuwh7h2H/view?usp=sharing) |
+| [Tensorflow Lite](https://bit.ly/3ytc6Wu)        | [✔️](https://drive.google.com/file/d/1RcNIygC6bi8E5EsYmM1a2YKjioC5iFZE/view?usp=sharing) |
+| [RaspiCam](https://bit.ly/38mTsFl)               | [✔️](https://drive.google.com/file/d/1p4DOahgOeoG4AQ29AB3A_YiUF7fMxFxb/view?usp=sharing) |
+| [CXXopts](https://bit.ly/3sU28MO): 2.2.1         | [✔️](https://drive.google.com/file/d/1VU4EA80AE_xNnJDVePAJEUNmqPtHWcps/view?usp=sharing) |
+| [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://drive.google.com/file/d/1BOVi3j5v8offJPDaFkm6jIUpn9Gw38va/view?usp=sharing) |
+| [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://drive.google.com/file/d/1IJhaDof-paWjeXAZWeOmyLD-co-j-6Vs/view?usp=sharing) |
 
 go to `/opt/` and extract all then good to go.
 
