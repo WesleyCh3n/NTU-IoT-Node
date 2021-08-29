@@ -1,7 +1,7 @@
 # NTU-IOT-NODE
 
-[![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
 [![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-ntu--IoT--node-2ea44f?logo=github)](https://github.com/WesleyCh3n/ntu-IoT-node)
+[![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
 
 
 This is NTU BME MS thesis project. The purpose of this project is using edge
