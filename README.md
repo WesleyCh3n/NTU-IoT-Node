@@ -1,4 +1,4 @@
-# NTU-IOT-NODE
+# NTU-IoT-Node
 
 [![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-ntu--IoT--node-2ea44f?logo=github)](https://github.com/WesleyCh3n/ntu-IoT-node)
 [![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
@@ -24,16 +24,18 @@ Usage:
 
   -s, --stream        Start streaming
   -n, --node arg      node number (default: )
-  -i, --image arg     Recognize Image
+  -i, --image arg     image directory to recognize (default: )
   -m, --mode arg      mode: 0:detect 1:classify 2:recognize (default: 2)
   -D, --detect arg    Detect model path (default:
-                      ./model/yolov4-tiny-416-fp16.tflite)
+                      ./model/yolov4-tiny-f16.tflite)
   -C, --classify arg  Classify model path (default:
-                      ./model/mobilenetv2-128.tflite)
-  -R, --ref arg       class reference (default: ./19-01.tsv)
-  -q, --mqtt arg      mqtt address
-  -u, --user arg      mqtt username
-  -p, --pwd arg       mqtt password
+                      ./model/mobilenetv2.tflite)
+  -R, --ref arg       class reference (default: ./cfg/ref.8f.tsv)
+  -d, --ref_dict arg  class id (default: ./cfg/ref_dict.csv)
+  -f, --fence arg     fence bbox (default: )
+  -q, --mqtt_ip arg   mqtt broker ip (default: )
+  -u, --user arg      mqtt username (default: )
+  -p, --pwd arg       mqtt password (default: )
   -v, --version       ntu-iot-node version
   -h, --help          Print usage
 ```
@@ -62,7 +64,15 @@ All libraries are built in static and default location is placed in `/opt/`. Or,
 | [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://drive.google.com/file/d/1BOVi3j5v8offJPDaFkm6jIUpn9Gw38va/view?usp=sharing) |
 | [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://drive.google.com/file/d/1IJhaDof-paWjeXAZWeOmyLD-co-j-6Vs/view?usp=sharing) |
 
-go to `/opt/` and extract all then good to go.
+For OpenCV, extract and cp `opencv/lib/pkgconfig/opencv4.pc` to your `$PKG_CONFIG_PATH` (default: `/usr/lib/pkgconfig/`). Then type `pkg-config --list-all|grep opencv` and if you see
+
+```bash=!
+$ pkg-config --list-all|grep opencv
+opencv4               OpenCV - Open Source Computer Vision Library
+```
+OpenCV is set up.
+
+Finally, go to `/opt/` and extract all then good to go.
 
 ### Compiling
 
@@ -84,8 +94,17 @@ then can type `./ntu-iot-node -h` to see the usage.
 
 ### Docker testing
 
-After compiling complete, you can use this docekr image to verify
+After compiling complete, you can use this docker image to verify
 ```bash
-$ docker run -it --rm --privileged=true -w /home/ -v `pwd`:/home/ -v /opt/vc:/opt/vc --device=/dev/vchiq --device=/dev/vcsm cpp-slim bash
+$ docker run -it --rm --privileged=true \
+-w /home/ \
+-v `pwd`:/home/ \
+-v /opt/vc:/opt/vc \
+--device=/dev/vchiq \
+--device=/dev/vcsm \
+welseych3n/cpp-slim bash
+```
+
+```bash
 root@CONTAINER_ID:/home# ./ntu-iot-node -h
 ```
