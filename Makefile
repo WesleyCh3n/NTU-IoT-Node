@@ -4,6 +4,10 @@ SRC := main.cc src/cow_monitor.cpp
 TARGET := ntu-iot-node
 OBJFILES := cow_monitor.o main.o
 
+LIBFILES := ./src/network/lib/libnetwork.a \
+./src/yolov4-tiny/lib/libyolov4_tiny.a \
+./src/mobilenetv2/lib/libmobilenetv2.a
+
 ifeq ($(RELEASE),1)
 	CCFLAGS += -DRELEASE -DNTU_IOT_NODE_VERSION=\"$(VERSION)\"
 endif
@@ -69,10 +73,18 @@ $(TARGET):$(OBJFILES)
 	@$(CC) $(CCFLAGS) -o $(TARGET) $(OBJFILES) $(INCLUDES) $(LIBDIRS) $(LIBS)
 	@echo "Compiling Complete"
 
-$(OBJFILES):$(SRC)
+$(OBJFILES):$(SRC) $(LIBFILES)
 	@echo "Compiling VERSION: $(VERSION)"
 	@echo "CC $@ FROM $^"
 	@$(CC) $(CCFLAGS) -c $(SRC) $(INCLUDES) $(LIBDIRS) $(LIBS)
+
+$(LIBFILES):
+	@echo "Compiling ./src/network/network.cc"
+	@make -C ./src/network/
+	@echo "Compiling ./src/yolov4-tiny/yolov4-tiny.cc"
+	@make -C ./src/yolov4-tiny/
+	@echo "Compiling ./src/mobilenetv2/mobilenetv2.cc"
+	@make -C ./src/mobilenetv2/
 
 .PHONY: clean
 clean:
