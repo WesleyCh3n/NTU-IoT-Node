@@ -111,7 +111,7 @@ then can type `./ntu-iot-node -h` to see the usage.
 
 ### Docker testing
 
-After compiling complete, you can use this docker image to verify
+After compiling complete, you can use the [docker image](https://hub.docker.com/layers/wesleych3n/ntu-iot/cc-slim/images/sha256-35eae8d8639e65f627726fb02caf60c53d8455c4e2aba83377bd5dfd27102f32?context=explore) to verify
 ```bash
 $ docker run -it --rm --privileged=true \
 -w /home/ \
