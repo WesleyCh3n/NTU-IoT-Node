@@ -1,6 +1,6 @@
 # NTU-IoT-Node
 
-[![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-ntu--IoT--node-2ea44f?logo=github)](https://github.com/WesleyCh3n/ntu-IoT-node)
+[![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-NTU--IoT--Node-2ea44f?logo=github)](https://github.com/WesleyCh3n/NTU-IoT-Node)
 [![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
 
 
@@ -79,8 +79,7 @@ Finally, go to `/opt/` and extract all then good to go.
 Clone the project to the Raspberry Pi. And cd to cc/recognition/ then compile.
 Make sure your prerequisites are built.
 ```bash
-git clone https://github.com/WesleyCh3n/ntu-iot-node
-cd cc/recognition/
+git clone https://github.com/WesleyCh3n/NTU-IoT-Node
 make clean; make RELEASE=1 VERSION=<version number>
 ```
 you will see something like
@@ -102,9 +101,10 @@ $ docker run -it --rm --privileged=true \
 -v /opt/vc:/opt/vc \
 --device=/dev/vchiq \
 --device=/dev/vcsm \
-welseych3n/cpp-slim bash
+wesleych3n/ntu-iot:cc-slim bash
 ```
 
+Then
 ```bash
-root@CONTAINER_ID:/home# ./ntu-iot-node -h
+./ntu-iot-node -h
 ```
