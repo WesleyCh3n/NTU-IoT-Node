@@ -10,9 +10,7 @@ streaming also recognizing individual cow faces by edge computing (with
 Tensorflow Lite etc).
 
 This repo contains c++ and python version. *The python version is deprecated, but still
-usable*(in `python` branch). The main program uses c++ which is in
-[cc/recognition](https://github.com/WesleyCh3n/ntu-iot-node/tree/main/cc/recognition)
- folder.
+usable*(in `python` branch). The main program uses c++.
 
 ## Usage
 
@@ -84,11 +82,31 @@ make clean; make RELEASE=1 VERSION=<version number>
 ```
 you will see something like
 ```bash
-rm -f ntu-iot-node include/cow_monitor.o main.o
-Compiling cow_monitor.o
-Compiling ntu-iot-node
+rm -f ntu-iot-node cow_monitor.o main.o
+Compiling ./src/network/network.cc
+make[1]: Entering directory '/home/pi/ntu-test/src/network'
+mkdir -p lib
+CC -c lib/network.o
+ar lib/libnetwork.a
+make[1]: Leaving directory '/home/pi/ntu-test/src/network'
+Compiling ./src/yolov4-tiny/yolov4-tiny.cc
+make[1]: Entering directory '/home/pi/ntu-test/src/yolov4-tiny'
+mkdir -p lib
+CC -c lib/yolov4-tiny.o
+ar lib/libyolov4_tiny.a
+make[1]: Leaving directory '/home/pi/ntu-test/src/yolov4-tiny'
+Compiling ./src/mobilenetv2/mobilenetv2.cc
+make[1]: Entering directory '/home/pi/ntu-test/src/mobilenetv2'
+mkdir -p lib
+CC -c lib/mobilenetv2.o
+ar lib/libmobilenetv2.a
+make[1]: Leaving directory '/home/pi/ntu-test/src/mobilenetv2'
+Compiling VERSION: test
+CC cow_monitor.o FROM main.cc src/cow_monitor.cpp src/network/lib/libnetwork.a src/yolov4-tiny/lib/libyolov4_tiny.a src/mobilenetv2/lib/libmobilenetv2.a
+CC ntu-iot-node FROM cow_monitor.o main.o
 Compiling Complete
 ```
+
 then can type `./ntu-iot-node -h` to see the usage.
 
 ### Docker testing
@@ -107,4 +125,27 @@ wesleych3n/ntu-iot:cc-slim bash
 Then
 ```bash
 ./ntu-iot-node -h
+```
+---
+## `upload.sh`
+
+### Usage
+
+```
+$ ./upload.sh \
+    -u rsync_user \
+    -p rsync_ip \
+    -P rsync_port \
+    -d remote_folder \
+    -t backup_time_interval(s)
+```
+
+for example
+```
+$ ./upload.sh \
+    -u root \
+    -p 255.255.255.255 \
+    -P 22 \
+    -d /data/dir \
+    -t 600
 ```
