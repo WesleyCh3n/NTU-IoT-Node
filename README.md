@@ -2,7 +2,9 @@
 
 [![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-NTU--IoT--Node-2ea44f?logo=github)](https://github.com/WesleyCh3n/NTU-IoT-Node) 
 ![OS - Raspberry Pi](https://img.shields.io/badge/OS-Raspberry_Pi-blue?logo=Raspberry+Pi) 
-![Made with - C++](https://img.shields.io/badge/Made_with-C%2B%2B-informational?logo=C%2B%2B) 
+![Made with - C++](https://img.shields.io/badge/Made_with-C%2B%2B17-informational?logo=C%2B%2B) 
+![TFLite - 2.4.1](https://img.shields.io/badge/TFLite-2.4.1-informational?logo=Tensorflow)
+![Bash - 5.0.3](https://img.shields.io/badge/Bash-5.0.3-informational?logo=gnu-bash)
 [![hackmd-github-sync-badge](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A/badge)](https://hackmd.io/V8NktJtNSamroQN6Tfxl5A)
 
 
