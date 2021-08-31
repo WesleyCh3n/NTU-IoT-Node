@@ -131,12 +131,12 @@ Then
 
 ### Usage
 
-```
+```bash
 $ ./upload.sh \
     -u rsync_user \
     -p rsync_ip \
     -P rsync_port \
-    -d remote_folder \
+    -d remote_folder \ # must have NODE+02d in the path to know which node is it
     -t backup_time_interval(s)
 ```
 
@@ -146,6 +146,6 @@ $ ./upload.sh \
     -u root \
     -p 255.255.255.255 \
     -P 22 \
-    -d /data/dir \
+    -d /data/dir/NODE00/ \
     -t 600
 ```
