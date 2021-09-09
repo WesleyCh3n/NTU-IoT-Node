@@ -1,4 +1,4 @@
-CCFLAGS := -std=c++17 -O3
+CCFLAGS := -std=c++17 -O3 -march=armv8-a -mfloat-abi=hard -mfpu=neon-fp-armv8
 SRC := ./yolov4-tiny.cc
 OBJFILES := ./lib/yolov4-tiny.o
 LIBFILES := ./lib/libyolov4_tiny.a

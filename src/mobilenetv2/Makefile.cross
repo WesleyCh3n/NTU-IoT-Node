@@ -1,4 +1,4 @@
-CCFLAGS := -std=c++17 -O3
+CCFLAGS := -std=c++17 -O3 -march=armv8-a -mfloat-abi=hard -mfpu=neon-fp-armv8
 SRC := ./mobilenetv2.cc
 OBJFILES := ./lib/mobilenetv2.o
 LIBFILES := ./lib/libmobilenetv2.a

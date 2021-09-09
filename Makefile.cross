@@ -1,4 +1,4 @@
-CCFLAGS := -Bstatic -std=c++17 -O3
+CCFLAGS := -Bstatic -std=c++17 -O3 -march=armv8-a -mfloat-abi=hard -mfpu=neon-fp-armv8
 SRC := main.cc src/cow_monitor.cpp
 TARGET := ntu-iot-node_cross
 OBJFILES := cow_monitor.o main.o
@@ -106,7 +106,7 @@ $(LIBFILES):
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET) cow_monitor.o main.o
+	rm -f $(TARGET) $(OBJFILES)
 
 .PHONY: dellib
 dellib:
