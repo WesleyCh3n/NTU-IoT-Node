@@ -45,6 +45,7 @@ add_subdirectory(${SRC_DIR}/yolov4-tiny yolov4-tiny_lib)
 # compile option
 if(NOT DEFINED VERSION)
     set(VERSION beta)
+    set(VERSION ${VERSION} PARENT_SCOPE)
 endif()
 message(STATUS "NTU IOT NODE:")
 message(STATUS "  VERSION = ${VERSION}")
