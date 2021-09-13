@@ -1,5 +1,5 @@
-#include "src/cow_monitor.h"
-#include "src/timer.h"
+#include "cow_monitor/cow_monitor.h"
+#include "timer.h"
 
 #include <set>
 #include <algorithm>
@@ -13,7 +13,6 @@
 
 #include "boost/format.hpp"
 #include "boost/math/tools/norms.hpp"
-#include "raspicam/raspicam_cv.h"
 #include "mqtt/client.h"
 using namespace std;
 namespace fs = std::filesystem;
@@ -162,14 +161,15 @@ bool CowMonitor::recognize_pipeline(cv::Mat image, int &total){
  *     status of Stream function
  *  */
 bool CowMonitor::Stream(int width, int height){
-    raspicam::RaspiCam_Cv Camera;
+    // raspicam::RaspiCam_Cv Camera;
+    cv::VideoCapture Camera(cv::CAP_ANY);
     cv::Mat frame;
     Camera.set(cv::CAP_PROP_FORMAT, CV_8UC3);
     Camera.set(cv::CAP_PROP_FRAME_WIDTH, width);
     Camera.set(cv::CAP_PROP_FRAME_HEIGHT, height);
     vW_ = width; vH_ = height;
     cout << "Opening Camera...\n";
-    if(!Camera.open()){
+    if(!Camera.isOpened()){
         cerr << "Error opening the camera\n";
         return -1;
     }
@@ -178,8 +178,9 @@ bool CowMonitor::Stream(int width, int height){
     std::cout << "Start Streaming...\n";
     for(;;){
         /* capture image */
-        Camera.grab();
-        Camera.retrieve(frame);
+        /* Camera.grab();
+         * Camera.retrieve(frame); */
+        Camera >> frame;
         cv::flip(frame, frame, -1);
         cv::Mat image=frame.clone();
 

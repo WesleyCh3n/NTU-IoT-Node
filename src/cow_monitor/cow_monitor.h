@@ -1,8 +1,8 @@
 #ifndef __COW_MONITOR_H__
 #define __COW_MONITOR_H__
 
-#include "src/yolov4-tiny/yolov4-tiny.h"
-#include "src/mobilenetv2/mobilenetv2.h"
+#include "yolov4-tiny/yolov4-tiny.h"
+#include "mobilenetv2/mobilenetv2.h"
 #include <iostream>
 #include <array>
 #include <deque>
