@@ -12,8 +12,8 @@ int main(){
      * Two Container need to be the same class
      * Below example won't work
      *  */
+    // std::vector<int> c{2,2,2};
     // double dist2 = boost::math::tools::l2_distance(a, c);
     // std::cout << dist2 << '\n';
-    // std::vector<int> c{2,2,2};
     return 0;
 }
