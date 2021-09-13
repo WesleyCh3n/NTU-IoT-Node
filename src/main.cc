@@ -2,7 +2,7 @@
 #include <string>
 #include <map>
 
-#include "src/cow_monitor.h"
+#include "cow_monitor/cow_monitor.h"
 #include "cxxopts.hpp"
 using namespace std;
 
