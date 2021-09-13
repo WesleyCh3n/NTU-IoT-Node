@@ -1,7 +1,7 @@
 #ifndef __MOBILENETV2_H__
 #define __MOBILENETV2_H__
 
-#include "network.h"
+#include "network/network.h"
 
 class MobileNetv2{
     public:

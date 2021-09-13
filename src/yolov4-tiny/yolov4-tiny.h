@@ -1,7 +1,7 @@
 #ifndef __YOLOV4TINY_H__
 #define __YOLOV4TINY_H__
 
-#include "network.h"
+#include "network/network.h"
 
 class Yolov4Tiny{
     public:

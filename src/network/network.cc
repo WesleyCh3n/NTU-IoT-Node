@@ -1,4 +1,4 @@
-#include "network.h"
+#include "network/network.h"
 
 /*
  * Preprocess input cv::Mat image
