@@ -19,26 +19,25 @@ usable*(in `python` branch). The main program uses c++.
 ## Usage
 
 ```bash
-$ ./ntu-iot-node -h
-Cow face monitoring system
+$ ntu-node -h
+NTU BBLAB cow face monitoring system
 Usage:
-  ntu-iot-node [OPTION...]
+  ntu-node [OPTION...]
 
   -s, --stream        Start streaming
-  -n, --node arg      node number (default: )
   -i, --image arg     image directory to recognize (default: )
-  -m, --mode arg      mode: 0:detect 1:classify 2:recognize (default: 2)
-  -D, --detect arg    Detect model path (default:
+  -D, --detect arg    detect model path (default:
                       ./model/yolov4-tiny-f16.tflite)
-  -C, --classify arg  Classify model path (default:
+  -C, --classify arg  classify model path (default:
                       ./model/mobilenetv2.tflite)
-  -R, --ref arg       class reference (default: ./cfg/ref.8f.tsv)
+  -n, --node arg      node number (default: )
+  -r, --ref arg       class reference (default: ./cfg/ref.8f.tsv)
   -d, --ref_dict arg  class id (default: ./cfg/ref_dict.csv)
   -f, --fence arg     fence bbox (default: )
-  -q, --mqtt_ip arg   mqtt broker ip (default: )
+  -m, --mqtt_ip arg   mqtt broker ip (default: )
   -u, --user arg      mqtt username (default: )
   -p, --pwd arg       mqtt password (default: )
-  -v, --version       ntu-iot-node version
+  -v, --version       ntu-node version
   -h, --help          Print usage
 ```
 
@@ -113,8 +112,30 @@ After cmake complete, start compile by (-j<number of thread>)
 ```bash
 make -j4
 ```
+once finished, you will get following output
+```bash
+[ 20%] Building CXX object cow_monitor/yolov4-tiny_lib/CMakeFiles/yolov4-tiny.dir/yolov4-tiny.cc.o
+[ 20%] Building CXX object cow_monitor/network_lib/CMakeFiles/network.dir/network.cc.o
+[ 30%] Building CXX object cow_monitor/mobilenetv2_lib/CMakeFiles/mobilenetv2.dir/mobilenetv2.cc.o
+[ 40%] Linking CXX static library libnetwork.a
+[ 40%] Built target network
+[ 50%] Linking CXX static library libmobilenetv2.a
+[ 50%] Built target mobilenetv2
+[ 60%] Linking CXX static library libyolov4-tiny.a
+[ 60%] Built target yolov4-tiny
+[ 70%] Building CXX object cow_monitor/CMakeFiles/cow_monitor.dir/cow_monitor.cpp.o
+[ 80%] Linking CXX static library libcow_monitor.a
+[ 80%] Built target cow_monitor
+[ 90%] Building CXX object CMakeFiles/ntu-node.dir/main.cc.o
+[100%] Linking CXX executable ntu-node
+[100%] Built target ntu-node
+```
 
-Then the folder should have `ntu-iot-node` binary.
+Then the folder should have `ntu-node` binary.
+
+### Cross Compiling
+
+TODO
 
 ### Docker Testing
 
@@ -140,12 +161,8 @@ arm64v8/debian:stable-slim bash
 
 Then
 ```bash
-./ntu-iot-node -h
+./ntu-node -h
 ```
-
-### Cross Compiling
-
-TODO
 
 ---
 ## `upload.sh`
