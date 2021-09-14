@@ -8,12 +8,11 @@ using namespace std;
 
 
 int main(int argc, char** argv){
-    cxxopts::Options options("ntu-iot-node", "Cow face monitoring system");
+    cxxopts::Options options("ntu-node", "Cow face monitoring system");
     options.add_options()
         ("s,stream", "Start streaming")
         ("n,node", "node number", cxxopts::value<std::string>()->default_value(""))
         ("i,image", "image directory to recognize", cxxopts::value<std::string>()->default_value(""))
-        ("m,mode", "mode: 0:detect 1:classify 2:recognize", cxxopts::value<int>()->default_value("2"))
         ("D,detect", "Detect model path", cxxopts::value<std::string>()->default_value("./model/yolov4-tiny-f16.tflite"))
         ("C,classify", "Classify model path", cxxopts::value<std::string>()->default_value("./model/mobilenetv2.tflite"))
         ("R,ref", "class reference", cxxopts::value<std::string>()->default_value("./cfg/ref.8f.tsv"))
@@ -22,7 +21,7 @@ int main(int argc, char** argv){
         ("q,mqtt_ip", "mqtt broker ip", cxxopts::value<std::string>()->default_value(""))
         ("u,user", "mqtt username", cxxopts::value<std::string>()->default_value(""))
         ("p,pwd", "mqtt password", cxxopts::value<std::string>()->default_value(""))
-        ("v,version", "ntu-iot-node version")
+        ("v,version", "ntu-node version")
         ("h,help", "Print usage");
     auto result = options.parse(argc, argv);
     if (result.count("help")){
@@ -52,17 +51,20 @@ int main(int argc, char** argv){
         std::cout<< u8"\033[2J\033[1;1H";
         CowMonitor cow_monitor;
         if(!cow_monitor.Init(conf_map)){
-            cerr << "Stop!\n";
+            cerr << "Cow Monitor Init Failed! Stop!\n";
+            cerr << "\tCheck cow ref or fence cfg are given properly\n";
             exit(-1);
         }
-        if(!cow_monitor.Stream()) cerr << "Stop!\n";
+        if(!cow_monitor.Stream())
+            cerr << "Cow Monitor Streaming Failed! Stop!\n";
     }
 
     if(result.count("image")){
         std::cout<< u8"\033[2J\033[1;1H";
         CowMonitor cow_monitor;
         if(!cow_monitor.Init(conf_map)){
-            cerr << "Stop!\n";
+            cerr << "Cow Monitor Init Failed! Stop!\n";
+            cerr << "\tCheck cow ref or fence cfg are given properly\n";
             exit(-1);
         }
         std::cout << "Recognize image\n";
