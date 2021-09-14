@@ -8,17 +8,17 @@ using namespace std;
 
 
 int main(int argc, char** argv){
-    cxxopts::Options options("ntu-node", "Cow face monitoring system");
+    cxxopts::Options options("ntu-node", "NTU BBLAB cow face monitoring system");
     options.add_options()
-        ("s,stream", "Start streaming")
-        ("n,node", "node number", cxxopts::value<std::string>()->default_value(""))
+        ("s,stream", "start streaming")
         ("i,image", "image directory to recognize", cxxopts::value<std::string>()->default_value(""))
-        ("D,detect", "Detect model path", cxxopts::value<std::string>()->default_value("./model/yolov4-tiny-f16.tflite"))
-        ("C,classify", "Classify model path", cxxopts::value<std::string>()->default_value("./model/mobilenetv2.tflite"))
-        ("R,ref", "class reference", cxxopts::value<std::string>()->default_value("./cfg/ref.8f.tsv"))
+        ("D,detect", "detect model path", cxxopts::value<std::string>()->default_value("./model/yolov4-tiny-f16.tflite"))
+        ("C,classify", "classify model path", cxxopts::value<std::string>()->default_value("./model/mobilenetv2.tflite"))
+        ("n,node", "node number", cxxopts::value<std::string>()->default_value(""))
+        ("r,ref", "class reference", cxxopts::value<std::string>()->default_value("./cfg/ref.8f.tsv"))
         ("d,ref_dict", "class id", cxxopts::value<std::string>()->default_value("./cfg/ref_dict.csv"))
         ("f,fence", "fence bbox", cxxopts::value<std::string>()->default_value(""))
-        ("q,mqtt_ip", "mqtt broker ip", cxxopts::value<std::string>()->default_value(""))
+        ("m,mqtt_ip", "mqtt broker ip", cxxopts::value<std::string>()->default_value(""))
         ("u,user", "mqtt username", cxxopts::value<std::string>()->default_value(""))
         ("p,pwd", "mqtt password", cxxopts::value<std::string>()->default_value(""))
         ("v,version", "ntu-node version")
@@ -52,7 +52,7 @@ int main(int argc, char** argv){
         CowMonitor cow_monitor;
         if(!cow_monitor.Init(conf_map)){
             cerr << "Cow Monitor Init Failed! Stop!\n";
-            cerr << "\tCheck cow ref or fence cfg are given properly\n";
+            cerr << "Check ref (-r), ref dictionary (-d), or fence cfg (-f) are given properly\n";
             exit(-1);
         }
         if(!cow_monitor.Stream())
@@ -64,7 +64,7 @@ int main(int argc, char** argv){
         CowMonitor cow_monitor;
         if(!cow_monitor.Init(conf_map)){
             cerr << "Cow Monitor Init Failed! Stop!\n";
-            cerr << "\tCheck cow ref or fence cfg are given properly\n";
+            cerr << "Check ref (-r), ref dictionary (-d), or fence cfg (-f) are given properly\n";
             exit(-1);
         }
         std::cout << "Recognize image\n";
