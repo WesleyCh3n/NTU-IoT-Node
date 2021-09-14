@@ -47,21 +47,18 @@ Usage:
 ### Platform
 
 - os: Raspbian GNU/Linux 10 (buster)
-- kernel: 5.4.51-v7l+
+- kernel: 5.4.51-v7l+ / 5.10.60-v8+
 
 ### Prerequisites
 
 All libraries are built in static and default location is placed in `/opt/`. Or, modify
-[Makefile](https://github.com/WesleyCh3n/ntu-iot-node/blob/main/cc/recognition/Makefile) (L15-L22)
- to the correct folder you built.
-
+`CMakeLists.txt` to the correct folder you built.
 
 
 | Library                                          |                                      Pre-built Link                                      |
 |:------------------------------------------------ |:----------------------------------------------------------------------------------------:|
 | [OpenCV](https://bit.ly/2Y8KyJK): 4.5.1          | [✔️](https://drive.google.com/file/d/1-HfoQ7DWhVF3rPNbOTsw3kopCuwh7h2H/view?usp=sharing) |
 | [Tensorflow Lite](https://bit.ly/3ytc6Wu)        | [✔️](https://drive.google.com/file/d/1RcNIygC6bi8E5EsYmM1a2YKjioC5iFZE/view?usp=sharing) |
-| [RaspiCam](https://bit.ly/38mTsFl)               | [✔️](https://drive.google.com/file/d/1p4DOahgOeoG4AQ29AB3A_YiUF7fMxFxb/view?usp=sharing) |
 | [CXXopts](https://bit.ly/3sU28MO): 2.2.1         | [✔️](https://drive.google.com/file/d/1VU4EA80AE_xNnJDVePAJEUNmqPtHWcps/view?usp=sharing) |
 | [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://drive.google.com/file/d/1BOVi3j5v8offJPDaFkm6jIUpn9Gw38va/view?usp=sharing) |
 | [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://drive.google.com/file/d/1IJhaDof-paWjeXAZWeOmyLD-co-j-6Vs/view?usp=sharing) |
@@ -76,60 +73,80 @@ OpenCV is set up.
 
 Finally, go to `/opt/` and extract all then good to go.
 
-### Compiling
+### RPi Native Compiling
 
 Clone the project to the Raspberry Pi. And cd to cc/recognition/ then compile.
 Make sure your prerequisites are built.
 ```bash
-git clone https://github.com/WesleyCh3n/NTU-IoT-Node
-make clean; make RELEASE=1 VERSION=<version number>
+git clone https://github.com/WesleyCh3n/NTU-IoT-Node cd && NTU-IoT-Node
+mkdir build && cd build
+cmake ../src/
 ```
 you will see something like
 ```bash
-rm -f ntu-iot-node cow_monitor.o main.o
-Compiling ./src/network/network.cc
-make[1]: Entering directory '/home/pi/ntu-test/src/network'
-mkdir -p lib
-CC -c lib/network.o
-ar lib/libnetwork.a
-make[1]: Leaving directory '/home/pi/ntu-test/src/network'
-Compiling ./src/yolov4-tiny/yolov4-tiny.cc
-make[1]: Entering directory '/home/pi/ntu-test/src/yolov4-tiny'
-mkdir -p lib
-CC -c lib/yolov4-tiny.o
-ar lib/libyolov4_tiny.a
-make[1]: Leaving directory '/home/pi/ntu-test/src/yolov4-tiny'
-Compiling ./src/mobilenetv2/mobilenetv2.cc
-make[1]: Entering directory '/home/pi/ntu-test/src/mobilenetv2'
-mkdir -p lib
-CC -c lib/mobilenetv2.o
-ar lib/libmobilenetv2.a
-make[1]: Leaving directory '/home/pi/ntu-test/src/mobilenetv2'
-Compiling VERSION: test
-CC cow_monitor.o FROM main.cc src/cow_monitor.cpp src/network/lib/libnetwork.a src/yolov4-tiny/lib/libyolov4_tiny.a src/mobilenetv2/lib/libmobilenetv2.a
-CC ntu-iot-node FROM cow_monitor.o main.o
-Compiling Complete
+-- The C compiler identification is GNU 8.3.0
+-- The CXX compiler identification is GNU 8.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/local/aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/local/aarch64-linux-gnu/bin/aarch64-linux-gnu-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /usr/bin/pkg-config (found version "0.29.2")
+-- Checking for module 'opencv4'
+--   Found opencv4, version 4.5.0
+-- NTU IOT NODE:
+--   VERSION = beta
+-- FOUND ARCH: arm64v8
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /work/arm64/ntu-node
+```
+make sure `ARCH` is the architecture you want to perform (in this example, aarch64 is built)
+
+After cmake complete, start compile by (-j<number of thread>)
+
+```bash
+make -j4
 ```
 
-then can type `./ntu-iot-node -h` to see the usage.
+Then the folder should have `ntu-iot-node` binary.
 
-### Docker testing
+### Docker Testing
 
-After compiling complete, you can use the [docker image](https://hub.docker.com/layers/wesleych3n/ntu-iot/cc-slim/images/sha256-35eae8d8639e65f627726fb02caf60c53d8455c4e2aba83377bd5dfd27102f32?context=explore) to verify
+After compiling complete, you can use the docker image to verify on RPi.
+
+For arm32v7: [docker image](https://hub.docker.com/layers/arm32v7/debian/stable-slim/images/sha256-7bb9de2067f4e4e3e2377070e180a05d33a0bc4289c66b9e71504063cf18da15?context=explore) 
 ```bash
 $ docker run -it --rm --privileged=true \
 -w /home/ \
 -v `pwd`:/home/ \
--v /opt/vc:/opt/vc \
---device=/dev/vchiq \
---device=/dev/vcsm \
-wesleych3n/ntu-iot:cc-slim bash
+--device=/dev/video0
+arm32v7/debian:stable-slim bash
+```
+
+For arm64v8: [docker image](https://hub.docker.com/layers/arm64v8/debian/stable-slim/images/sha256-051adf1212e6a3ba39a13a02afd690a81e6422461b81042c35c74ae9cc8ed272?context=explore) 
+```bash
+$ docker run -it --rm --privileged=true \
+-w /home/ \
+-v `pwd`:/home/ \
+--device=/dev/video0
+arm64v8/debian:stable-slim bash
 ```
 
 Then
 ```bash
 ./ntu-iot-node -h
 ```
+
+### Cross Compiling
+
+TODO
+
 ---
 ## `upload.sh`
 
