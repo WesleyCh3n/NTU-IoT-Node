@@ -6,7 +6,7 @@
 #include "timer.h"
 
 
-int main(){
+int main(int argc, char *argv[]){
     if (argc != 4) {
         std::cerr << "Usage:\n\t./classify <model path> <repeat time> <img>\n";
         return 1;
