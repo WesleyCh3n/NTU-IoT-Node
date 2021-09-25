@@ -48,7 +48,7 @@ Usage:
 - os: Raspbian GNU/Linux 10 (buster)
 - kernel: 5.4.51-v7l+ / 5.10.60-v8+
 
-### Prerequisites
+### Prerequisites (third-party library)
 
 All libraries are built in static and default location is placed in `/opt/`. Or, modify
 `CMakeLists.txt` to the correct folder you built.
