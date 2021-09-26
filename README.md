@@ -53,14 +53,15 @@ Usage:
 All libraries are built in static and default location is placed in `/opt/`. Or, modify
 `CMakeLists.txt` to the correct folder you built.
 
+| Library                                                 | armv7                                                                                        | arm64                                                                                        |
+|:--------------------------------------------------------|:--------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|
+| [OpenCV](https://bit.ly/2Y8KyJK): 4.5.3                 | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/armv7/download_opencv.sh)  | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/arm64/download_opencv.sh)  |
+| [Tensorflow Lite](https://bit.ly/3ytc6Wu): 2.4.2        | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/armv7/download_tflite.sh)  | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/arm64/download_tflite.sh)  |
+| [CXXopts](https://bit.ly/3sU28MO): 2.2.1                | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/armv7/download_cxxopts.sh) | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/arm64/download_cxxopts.sh) |
+| [MQTT](https://github.com/eclipse/paho.mqtt.cpp): 1.2.0 | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/armv7/download_mqtt.sh)    | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/arm64/download_mqtt.sh)    |
+| [Boost](https://bit.ly/2UX4A8J): 1.75.0                 | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/armv7/download_boost.sh)   | [✔️](https://github.com/WesleyCh3n/NTU-IoT-Node/blob/main/3rdparty/arm64/download_boost.sh)   |
 
-| Library                                          |                                      Pre-built Link                                      |
-|:------------------------------------------------ |:----------------------------------------------------------------------------------------:|
-| [OpenCV](https://bit.ly/2Y8KyJK): 4.5.1          | [✔️](https://drive.google.com/file/d/1-HfoQ7DWhVF3rPNbOTsw3kopCuwh7h2H/view?usp=sharing) |
-| [Tensorflow Lite](https://bit.ly/3ytc6Wu)        | [✔️](https://drive.google.com/file/d/1RcNIygC6bi8E5EsYmM1a2YKjioC5iFZE/view?usp=sharing) |
-| [CXXopts](https://bit.ly/3sU28MO): 2.2.1         | [✔️](https://drive.google.com/file/d/1VU4EA80AE_xNnJDVePAJEUNmqPtHWcps/view?usp=sharing) |
-| [MQTT](https://github.com/eclipse/paho.mqtt.cpp) | [✔️](https://drive.google.com/file/d/1BOVi3j5v8offJPDaFkm6jIUpn9Gw38va/view?usp=sharing) |
-| [Boost](https://bit.ly/2UX4A8J): 1.75.0          | [✔️](https://drive.google.com/file/d/1IJhaDof-paWjeXAZWeOmyLD-co-j-6Vs/view?usp=sharing) |
+use `download_xxx.sh` to download and extract.
 
 For OpenCV, extract and cp `opencv/lib/pkgconfig/opencv4.pc` to your `$PKG_CONFIG_PATH` (default: `/usr/lib/pkgconfig/`). Then type `pkg-config --list-all|grep opencv` and if you see
 
