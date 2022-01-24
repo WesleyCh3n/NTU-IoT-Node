@@ -1,9 +1,9 @@
 # NTU-IoT-Node
 
-[![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-NTU--IoT--Node-2ea44f?style=for-the-badge&logo=github)](https://github.com/WesleyCh3n/NTU-IoT-Node) 
+[![WesleyCh3n - ntu-IoT-node](https://img.shields.io/badge/WesleyCh3n-NTU--IoT--Node-2ea44f?style=for-the-badge&logo=github)](https://github.com/WesleyCh3n/NTU-IoT-Node)
 ![Docker - cross-compile](https://img.shields.io/badge/Docker-cross--compile-informational?style=for-the-badge&logo=docker)
-![OS - Raspberry Pi](https://img.shields.io/badge/OS-Raspberry_Pi-blue?style=for-the-badge&logo=Raspberry+Pi) 
-![Made with - C++](https://img.shields.io/badge/Made_with-C%2B%2B17-informational?style=for-the-badge&logo=C%2B%2B) 
+![OS - Raspberry Pi](https://img.shields.io/badge/OS-Raspberry_Pi-blue?style=for-the-badge&logo=Raspberry+Pi)
+![Made with - C++](https://img.shields.io/badge/Made_with-C%2B%2B17-informational?style=for-the-badge&logo=C%2B%2B)
 ![TFLite - 2.4.1](https://img.shields.io/badge/TFLite-2.4.1-informational?style=for-the-badge&logo=Tensorflow)
 ![Bash - 5.0.3](https://img.shields.io/badge/Bash-5.0.3-informational?style=for-the-badge&logo=gnu-bash)
 
@@ -78,7 +78,7 @@ Finally, go to `/opt/` and extract all then good to go.
 Clone the project to the Raspberry Pi. And cd to cc/recognition/ then compile.
 Make sure your prerequisites are built.
 ```bash
-git clone https://github.com/WesleyCh3n/NTU-IoT-Node cd && NTU-IoT-Node
+git clone https://github.com/WesleyCh3n/NTU-IoT-Node && cd NTU-IoT-Node
 mkdir build && cd build
 cmake ../src/
 ```
@@ -136,13 +136,38 @@ Then the folder should have `ntu-node` binary.
 
 ### Cross Compiling
 
-TODO
+Use [`pi-cross`](https://github.com/WesleyCh3n/pi-cross) docker image to build. Follow `pi-cross` instruction to install helper script on your x64 host machine. Then,
 
-### Docker Testing
+```bash
+git clone https://github.com/WesleyCh3n/NTU-IoT-Node && cd NTU-IoT-Node
+mkdir -p ./build/opt && cd build/opt/
+
+# download all lib
+../../3rdparty/armv7/download_mqtt.sh
+../../3rdparty/armv7/download_boost.sh
+../../3rdparty/armv7/download_opencv.sh
+../../3rdparty/armv7/download_tflite.sh
+../../3rdparty/armv7/download_cxxopts.sh
+
+# Start pi-cross container instance
+cd ../../ # Back to root dir of NTU-IoT-Node
+# Start container with mounting opencv.pc and lib folder
+armv7-8.3.0 -a "-v `pwd`/build/opt/opencv/lib/pkgconfig/opencv4.pc:/usr/lib/pkgconfig/opencv4.pc:ro \
+-v `pwd`/build/opt:/opt/" bash
+
+# (following is in container)
+cd build && cmake ../src/
+make -j4
+
+# Then the `build` directory should have `ntu-node` binary.
+exit
+```
+
+### Rpi Native Docker Testing
 
 After compiling complete, you can use the docker image to verify on RPi.
 
-For arm32v7: [docker image](https://hub.docker.com/layers/arm32v7/debian/stable-slim/images/sha256-7bb9de2067f4e4e3e2377070e180a05d33a0bc4289c66b9e71504063cf18da15?context=explore) 
+For arm32v7: [docker image](https://hub.docker.com/layers/arm32v7/debian/stable-slim/images/sha256-7bb9de2067f4e4e3e2377070e180a05d33a0bc4289c66b9e71504063cf18da15?context=explore)
 ```bash
 $ docker run -it --rm --privileged=true \
 -w /home/ \
@@ -151,7 +176,7 @@ $ docker run -it --rm --privileged=true \
 arm32v7/debian:stable-slim bash
 ```
 
-For arm64v8: [docker image](https://hub.docker.com/layers/arm64v8/debian/stable-slim/images/sha256-051adf1212e6a3ba39a13a02afd690a81e6422461b81042c35c74ae9cc8ed272?context=explore) 
+For arm64v8: [docker image](https://hub.docker.com/layers/arm64v8/debian/stable-slim/images/sha256-051adf1212e6a3ba39a13a02afd690a81e6422461b81042c35c74ae9cc8ed272?context=explore)
 ```bash
 $ docker run -it --rm --privileged=true \
 -w /home/ \
