@@ -9,7 +9,7 @@
 
 
 #include "mqtt/client.h"
-#define CLASS_NUM 19
+#define CLASS_NUM 21 // FIX: hard coded number
 #define N_FENCE 3    // max number of fence
 
 using namespace std;
