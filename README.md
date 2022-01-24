@@ -136,7 +136,7 @@ Then the folder should have `ntu-node` binary.
 
 ### Cross Compiling
 
-Use [`pi-cross`](https://github.com/WesleyCh3n/pi-cross) docker image to build. Follow `pi-cross` instruction to install helper script on your x64 host machine. Then,
+Use [`pi-cross`](https://github.com/WesleyCh3n/pi-cross) docker image to build. Follow `pi-cross` instruction to install helper script on your x64 host machine. In this example, `armv7` target was used.
 
 ```bash
 git clone https://github.com/WesleyCh3n/NTU-IoT-Node && cd NTU-IoT-Node
